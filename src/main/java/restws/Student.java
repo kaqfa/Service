@@ -475,16 +475,16 @@ public class Student {
 			
 			for (int y = 0; y < files.size(); y++) {
 				JSONObject file = (JSONObject) files.get(y);
-				file.replace("upload_date", (Date) JSON.parse(file.get("upload_date").toString()));
+				file.put("upload_date", (Date) JSON.parse(file.get("upload_date").toString()));
 				fileToSet.add(file);
 			}
-			
+		
 			task.put("id_task", GeneralService.GetTaskID(collStudent, student));
 			task.put("status", 0);
-			task.replace("duration", duration);
+			task.put("duration", duration);
 			task.put("created_date", Service.today);
 			task.put("end_date", null);
-			task.replace("file", fileToSet);
+			task.put("file", fileToSet);
 			task.put("comment", new JSONArray());
 			
 			DBObject queryObject = new BasicDBObject();
