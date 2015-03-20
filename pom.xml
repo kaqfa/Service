@@ -65,7 +65,7 @@
 				  <path>/${project.build.finalName}</path>  
 				  <update>true</update>  
 				  <url>http://128.199.163.105:8080/manager/text</url>  
-				  <username>tomcat</username>  
+				  <username>tomcatuser</username>  
 				  <password>udinuslabf</password>  
 				 </configuration>  
 			</plugin>
