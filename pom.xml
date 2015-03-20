@@ -46,5 +46,19 @@
   </dependencies>
   <build>
     <finalName>thesismanagement</finalName>
+    <plugins>
+	    <plugin>  
+		 <groupId>org.apache.tomcat.maven</groupId>  
+		 <artifactId>tomcat7-maven-plugin</artifactId>  
+		 <version>2.2</version>  
+		 <configuration>  
+		  <path>/${project.build.finalName}</path>  
+		  <update>true</update>  
+		  <url>http://128.199.163.105:8080/manager/text</url>  
+		  <username>tomcat</username>  
+		  <password>udinuslabf</password>  
+		 </configuration>  
+		</plugin>
+	</plugins>  
   </build>
 </project>
