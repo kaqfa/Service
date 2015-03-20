@@ -1,0 +1,908 @@
+{
+	"swagger" : "2.0",
+	"schemes" : ["http"],
+	"termsOfService": "http://swagger.io/terms/",
+	"host" : "localhost:8080/RESTfulWS",
+	"basePath" : "/rest",
+	"info" : {
+		"description" : "Description",
+		"version" : "1.0.0",
+		"title" : "Thesis Management",
+		"contact" : {
+			"Name" : "Janu",
+			"url" : "localhost:8080/RESTfulWS",
+			"email" : "hmnjnr@gmail.com"
+		},
+		"license" : {
+			"name" : "Apache 2.0",
+			"url" : "http://www.apache.org/licenses/LICENSE-2.0.html"
+		}
+	},
+	"paths" : {
+	"/s/register" : {
+			"post" : {
+				"tags" : ["Student"],
+				"summary" : "Register Student",
+				"description" : "Register Student",
+				"operationId" : "RegisterStudent",
+				"consumes" : ["application/json"],
+				"produces" : ["application/json"],
+				"parameters" : [{
+						"in" : "body",
+						"name" : "body",
+						"description" : "Student's data",
+						"required" : true,
+						"schema" : {
+							"$ref" : "#/definitions/student"
+						}
+					}
+				],
+				"responses" : {
+					"200" : {
+						"description" : "Successful Operation",
+						"schema":{
+							"$ref":"#/definitions/nodata"
+						}
+					}
+				}
+			}
+		},
+	"/s/propose" : {
+			"post" : {
+				"tags" : ["Student"],
+				"summary" : "Propose Supervisor",
+				"description" : "Propose Supervisor",
+				"operationId" : "ProposeSupervisor",
+				"consumes" : ["application/json"],
+				"produces" : ["application/json"],
+				"parameters" : [{
+						"in" : "body",
+						"name" : "body",
+						"description" : "Supervisor Id",
+						"required" : true,
+						"schema" : {
+							"$ref" : "#/definitions/proposesupervisor"
+						}
+					}
+				],
+				"responses" : {
+					"200" : {
+						"description" : "Successful Operation",
+						"schema":{
+							"$ref":"#/definitions/nodata"
+						}
+					}
+				}
+			}
+		},
+		"/f/isexist" : {
+			"post" : {
+				"tags" : ["General"],
+				"summary" : "Is Username Exist",
+				"description" : "Check username",
+				"operationId" : "isexist",
+				"consumes" : ["application/json"],
+				"produces" : ["application/json"],
+				"parameters" : [{
+						"in" : "body",
+						"name" : "body",
+						"description" : "Student's username that will be checked",
+						"required" : true,
+						"schema" : {
+							"$ref" : "#/definitions/IsExist"
+						}
+					}
+				],
+				"responses" : {
+					"200" : {
+						"description" : "Successful Operation",
+						"schema":{
+							"$ref":"#/definitions/nodata"
+						}
+					}
+				}
+			}
+		},
+		"/s/inputcode" : {
+			"post" : {
+				"tags" : ["Student"],
+				"summary" : "Input kode bimbingan",
+				"description" : "Input kode bimbingan",
+				"operationId" : "InputCode",
+				"consumes" : ["application/json"],
+				"produces" : ["application/json"],
+				"parameters" : [{
+						"in" : "body",
+						"name" : "body",
+						"description" : "Input kode bimbingan",
+						"required" : true,
+						"schema" : {
+							"$ref" : "#/definitions/inputcode"
+						}
+					}
+				],
+				"responses" : {
+					"200" : {
+						"description" : "Successful Operation",
+						"schema":{
+							"$ref":"#/definitions/nodata"
+						}
+					}
+				}
+			}
+		},
+		"/f/auth" : {
+			"post" : {
+				"tags" : ["General"],
+				"summary" : "Authentication",
+				"description" : "Authentication",
+				"operationId" : "Authentication",
+				"consumes" : ["application/json"],
+				"produces" : ["application/json"],
+				"parameters" : [{
+						"in" : "body",
+						"name" : "body",
+						"description" : "Aunthetication",
+						"required" : true,
+						"schema" : {
+							"$ref" : "#/definitions/Aunthetication"
+						}
+					}
+				],
+				"responses" : {
+					"200" : {
+						"description" : "Successful Operation",
+						"schema":{
+							"$ref":"#/definitions/nodata"
+						}
+					}
+				}
+			}
+		},
+		"/s/get/{username}/{appkey}/{token}":{
+			"get" : {
+				"tags" : ["Student"],
+				"summary" : "Get Student",
+				"description" : "Mendapatkan detail data siswa",
+				"operationId" : "GetStudent",
+				"consumes" : ["application/json"],
+				"produces" : ["application/json"],
+				"parameters" : [
+					{
+						"in" : "path",
+						"name" : "username",
+						"description" : "Student's username",
+						"required" : true,
+						"type" : "string"
+					},
+					{
+						"in" : "path",
+						"name" : "appkey",
+						"description" : "Application key",
+						"required" : true,
+						"type" : "string"
+					},
+					{
+						"in" : "path",
+						"name" : "token",
+						"description" : "Token for authentication",
+						"required" : true,
+						"type" : "string"
+					}
+				],
+				"responses" : {
+					"default" : {
+						"description" : "Successful Operation",
+						"schema" : {
+							"$ref" : "#/definitions/withdata"	
+						}
+					}
+				}
+			}	
+		},"/s/getall":{
+			"get" : {
+				"tags" : ["Student"],
+				"summary" : "Get All Student",
+				"description" : "Mendapatkan seluruh list mahasiswa",
+				"operationId" : "GetAllStudent",
+				"consumes" : ["application/json"],
+				"produces" : ["application/json"],
+				"parameters" : [{
+						"in" : "body",
+						"name" : "body",
+						"description" : "",
+						"required" : true,
+						"schema" : {
+							"$ref" : "#/definitions/token"
+						}
+					}
+				],
+				"responses" : {
+					"default" : {
+						"description" : "Successful Operation",
+						"schema" : {
+							"$ref" : "#/definitions/withdata"	
+						}
+					}
+				}
+			}	
+		},
+		"/s/savethesis" : {
+			"post" : {
+				"tags" : ["Student"],
+				"summary" : "Membuat data TA",
+				"description" : "Membuat data TA",
+				"operationId" : "SaveThesis",
+				"consumes" : ["application/json"],
+				"produces" : ["application/json"],
+				"parameters" : [{
+						"in" : "body",
+						"name" : "body",
+						"description" : "Thesis",
+						"required" : true,
+						"schema" : {
+							"$ref" : "#/definitions/thesis"
+						}
+					}
+				],
+				"responses" : {
+					"200" : {
+						"description" : "Successful Operation",
+						"schema":{
+							"$ref":"#/definitions/nodata"
+						}
+					}
+				}
+			}
+		},
+		"/su/register" : {
+			"post" : {
+				"tags" : ["Supervisor"],
+				"summary" : "Register Supervisor",
+				"description" : "Register Supervisor",
+				"operationId" : "RegisterSupervisor",
+				"consumes" : ["application/json"],
+				"produces" : ["application/json"],
+				"parameters" : [{
+						"in" : "body",
+						"name" : "body",
+						"description" : "Supervisor's data",
+						"required" : true,
+						"schema" : {
+							"$ref" : "#/definitions/supervisor"
+						}
+					}
+				],
+				"responses" : {
+					"200" : {
+						"description" : "Successful Operation",
+						"schema":{
+							"$ref":"#/definitions/nodata"
+						}
+					}
+				}
+			}
+		},
+		"/su/getall":{
+			"get" : {
+				"tags" : ["Supervisor"],
+				"summary" : "Get All Supervisor",
+				"description" : "Mendapatkan seluruh list supervisor",
+				"operationId" : "GetAllSupervisor",
+				"consumes" : ["application/json"],
+				"produces" : ["application/json"],
+				"parameters" : [
+					{
+						"in" : "path",
+						"name" : "appkey",
+						"description" : "Application key",
+						"required" : true,
+						"type" : "string"
+					},
+					{
+						"in" : "path",
+						"name" : "token",
+						"description" : "Token for authentication",
+						"required" : true,
+						"type" : "string"
+					}
+				],
+				"responses" : {
+					"default" : {
+						"description" : "Successful Operation",
+						"schema" : {
+							"$ref" : "#/definitions/withdata"	
+						}
+					}
+				}
+			}	
+		},
+		"/su/getstudentprogress":{
+			"post" : {
+				"tags" : ["Supervisor"],
+				"summary" : "Get All Student Progress",
+				"description" : "Mendapatkan progres seluruh mahasiswa yang dibimbing",
+				"operationId" : "GetAllProgress",
+				"consumes" : ["application/json"],
+				"produces" : ["application/json"],
+				"parameters" : [{
+						"in" : "body",
+						"name" : "body",
+						"description" : "",
+						"required" : true,
+						"schema" : {
+							"$ref" : "#/definitions/token"
+						}
+					}
+				],
+				"responses" : {
+					"default" : {
+						"description" : "Successful Operation",
+						"schema" : {
+							"$ref" : "#/definitions/withdata"	
+						}
+					}
+				}
+			}	
+		},
+		"/su/get/{username}/{appkey}/{token}":{
+			"get" : {
+				"tags" : ["Supervisor"],
+				"summary" : "Get Supervisor",
+				"description" : "Mendapatkan detail data supervisor",
+				"operationId" : "GetSupervisor",
+				"consumes" : ["application/json"],
+				"produces" : ["application/json"],
+				"parameters" : [
+					{
+						"in" : "path",
+						"name" : "username",
+						"description" : "Supervisor's username",
+						"required" : true,
+						"type" : "string"
+					},
+					{
+						"in" : "path",
+						"name" : "appkey",
+						"description" : "Application key",
+						"required" : true,
+						"type" : "string"
+					},
+					{
+						"in" : "path",
+						"name" : "token",
+						"description" : "Token for authentication",
+						"required" : true,
+						"type" : "string"
+					}
+				],
+				"responses" : {
+					"default" : {
+						"description" : "Successful Operation",
+						"schema" : {
+							"$ref" : "#/definitions/withdata"	
+						}
+					}
+				}
+			}	
+		},
+			"/su/createtemplate" : {
+			"post" : {
+				"tags" : ["Supervisor"],
+				"summary" : "Create Template",
+				"description" : "Create Template",
+				"operationId" : "Create Template",
+				"consumes" : ["application/json"],
+				"produces" : ["application/json"],
+				"parameters" : [{
+						"in" : "body",
+						"name" : "body",
+						"description" : "Create Template",
+						"required" : true,
+						"schema" : {
+							"$ref" : "#/definitions/template"
+						}
+					}
+				],
+				"responses" : {
+					"200" : {
+						"description" : "Successful Operation",
+						"schema":{
+							"$ref":"#/definitions/nodata"
+						}
+					}
+				}
+			}
+		},
+		"/su/updatetemplate" : {
+			"post" : {
+				"tags" : ["Supervisor"],
+				"summary" : "Update Template",
+				"description" : "Update Template",
+				"operationId" : "Update Template",
+				"consumes" : ["application/json"],
+				"produces" : ["application/json"],
+				"parameters" : [{
+						"in" : "body",
+						"name" : "body",
+						"description" : "Update Template",
+						"required" : true,
+						"schema" : {
+							"$ref" : "#/definitions/updatetemplate"
+						}
+					}
+				],
+				"responses" : {
+					"200" : {
+						"description" : "Successful Operation",
+						"schema":{
+							"$ref":"#/definitions/nodata"
+						}
+					}
+				}
+			}
+		},
+		"/su/deletetemplate" : {
+			"post" : {
+				"tags" : ["Supervisor"],
+				"summary" : "Delete Template",
+				"description" : "Delete Template",
+				"operationId" : "Delete Template",
+				"consumes" : ["application/json"],
+				"produces" : ["application/json"],
+				"parameters" : [{
+						"in" : "body",
+						"name" : "body",
+						"description" : "Delete Template",
+						"required" : true,
+						"schema" : {
+							"$ref" : "#/definitions/deletetemplate"
+						}
+					}
+				],
+				"responses" : {
+					"200" : {
+						"description" : "Successful Operation",
+						"schema":{
+							"$ref":"#/definitions/nodata"
+						}
+					}
+				}
+			}
+		},
+		"/su/proposal" : {
+			"post" : {
+				"tags" : ["Supervisor"],
+				"summary" : "Response Proposal",
+				"description" : "Response Proposal",
+				"operationId" : "Response Proposal",
+				"consumes" : ["application/json"],
+				"produces" : ["application/json"],
+				"parameters" : [{
+						"in" : "body",
+						"name" : "body",
+						"description" : "Response Proposal",
+						"required" : true,
+						"schema" : {
+							"$ref" : "#/definitions/proposal"
+						}
+					}
+				],
+				"responses" : {
+					"200" : {
+						"description" : "Successful Operation",
+						"schema":{
+							"$ref":"#/definitions/nodata"
+						}
+					}
+				}
+			}
+		},
+		"/su/createtask" :{
+			"post":{
+				"tags" : ["Supervisor"],
+				"operationId" : "CreateTak",
+				"description" : "Create task for student",
+			    "summary" : "POST a file to storage",
+			    "produces":[ "application/json" ],
+			    "consumes":[ "multipart/form-data" ],
+			    "responses" : {
+					"default" : {
+						"description" : "Successful Operation",
+						"schema" : {
+							"$ref" : "#/definitions/nodata"	
+						}
+					}
+				},
+			    "parameters" : [
+			    	{
+				      "name": "appkey",
+				      "description": "Application key for security",
+				      "paramType": "multipart/form-data",
+				      "required": true,
+				      "type": "string"
+				    },
+				    {
+				      "name": "token",
+				      "description": "Token for authentication",
+				      "paramType": "form",
+				      "required": true,
+				      "type": "string"
+				    },
+				    {
+				      "name": "student",
+				      "description": "Student's username",
+				      "paramType": "form",
+				      "required": true,
+				      "type": "string"
+				    },
+				    {
+				      "name": "name",
+				      "description": "Student's name",
+				      "paramType": "form",
+				      "required": true,
+				      "type": "string"
+				    },
+				    {
+				      "name": "description",
+				      "description": "Further description for task",
+				      "paramType": "form",
+				      "type": "string"
+				    },
+				    {
+				      "name": "duration",
+				      "description": "Duration for the task. (day)",
+				      "paramType": "form",				      
+				      "type": "integer"
+				    },
+				    {
+				      "name": "File",
+				      "description": "The file to upload.",
+				      "type": "file",
+				      "paramType": "body",
+				      "multiple": true
+				      
+				    }
+				]
+			}
+		} 	
+	},
+	"definitions" : {
+		"nodata" : {
+			"required":[
+				"code","message"
+			],
+			"properties" : {
+				"code" : {
+					"title":"code",
+					"description":"Code for response",
+					"type" : "integer",
+					"enum" : [1,0,-1]
+				},
+				"message" : {
+					"type" : "string",
+					"description" : "Message for response"
+				}
+			}
+		},
+		"withdata" : {
+			"required":[
+				"code","message","data"
+			],
+			"properties" : {
+				"code" : {
+					"title":"code",
+					"description":"Code for response",
+					"type" : "integer",
+					"enum" : [1,0,-1]
+				},
+				"message" : {
+					"type" : "string",
+					"description" : "Message for response"
+				},
+				"data" : {
+					"type" : "object",
+					"description" : "Either JSONArray or JSONObject"
+				}
+			}
+		},
+		"student" : {
+			"required":[
+				"appkey","username","password","nim","name"
+			],
+			"properties" : {
+				"appkey" : {
+					"type" : "string",
+					"description" : " 20 Characters"
+				},
+				"username" : {
+					"type" : "string",
+					"description" : " 4 - 15 Characters, Type: Alphanumeric, dash, underscore, dot"
+				},
+				"password" : {
+					"type" : "string",
+					"description" : " 8 - 16 Characters, Type: Alphanumeric"
+				},
+				"nim" : {
+					"type" : "string",
+					"description" : " 14 Characters Maximum, Format: X12.3456.7890"
+				},
+				"name" : {
+					"type" : "string",
+					"description" : " 30 Characters Maximum "
+				},
+				"address" : {
+					"type" : "string",
+					"description" : " 50 Characters Maximum "
+				},
+				"handphone" : {
+					"type" : "string",
+					"description" : " 20 Characters, Type: Number "
+				},
+				"email" : {
+					"type" : "string",
+					"description" : " Format: xxx@ggwpmail.com "
+				}
+			}
+		},
+		"supervisor" : {
+			"required":[
+				"appkey","usename","password","npp","name"
+			],
+			"properties" : {
+				"appkey" : {
+					"type" : "string",
+					"description" : " 20 Characters"
+				},
+				"username" : {
+					"type" : "string",
+					"description" : " 4 - 15 Characters, Type: Alphanumeric, dash, underscore, dot"
+				},
+				"password" : {
+					"type" : "string",
+					"description" : " 8 - 16 Characters, Type: Alphanumeric"
+				},
+				"npp" : {
+					"type" : "string",
+					"description" : " 16 Characters Maximum, Format: 0123.45.6789.012"
+				},
+				"name" : {
+					"type" : "string",
+					"description" : " 30 Characters Maximum "
+				},
+				"address" : {
+					"type" : "string",
+					"description" : " 50 Characters Maximum "
+				},
+				"handphone" : {
+					"type" : "string",
+					"description" : " 20 Characters, Type: Number "
+				},
+				"email" : {
+					"type" : "string",
+					"description" : " Format: xxx@ggwpmail.com "
+				}
+			}
+		},
+		"thesis" : {
+			"required":[
+				"code","message","data"
+			],
+			"properties" : {
+				"appkey" : {
+					"type" : "string",
+					"description" : " 20 Characters"
+				},
+				"token" : {
+					"type" : "string",
+					"description" : " 20 Characters"
+				},
+				"topic" : {
+					"type" : "string",
+					"description" : " 150 Characters maximum"
+				},
+				"title" : {
+					"type" : "string",
+					"description" : " 100 Characters Maximum"
+				},
+				"description" : {
+					"type" : "string",
+					"description" : " 250 Word Maximum "
+				},
+				"field" : {
+					"type" : "string",
+					"description" : " field "
+				}
+			}
+		},
+		"token" : {
+			"required":[
+				"token","appkey"
+			],
+			"properties" : {
+				"appkey" : {
+					"type" : "string",
+					"description" : " 20 Characters"
+				},
+				"token" : {
+					"type" : "string",
+					"description" : " 20 Characters"
+				}
+			}
+		},
+		"template" : {
+			"required":[
+				"appkey","token","name"
+			],
+			"properties" : {
+				"appkey" : {
+					"type" : "string",
+					"description" : " 20 Characters"
+				},
+				"token" : {
+					"type" : "string",
+					"description" : " 20 Characters"
+				},
+				"name" : {
+					"type" : "string",
+					"description" : " 20 Characters maximum"
+				},
+				"description" : {
+					"type" : "string",
+					"description" : " 100 Characters Maximum "
+				}
+			}
+		},
+		"updatetemplate" : {
+			"required":[
+				"appkey","token","name","code"
+			],
+			"properties" : {
+				"appkey" : {
+					"type" : "string",
+					"description" : " 20 Characters"
+				},
+				"token" : {
+					"type" : "string",
+					"description" : " 20 Characters"
+				},
+				"name" : {
+					"type" : "string",
+					"description" : " 20 Characters maximum"
+				},
+				"code" : {
+					"type" : "string",
+					"description" : " 5 Characters "
+				},
+				"description" : {
+					"type" : "string",
+					"description" : " 100 Characters Maximum "
+				}
+			}
+		},
+		"deletetemplate" : {
+			"required":[
+				"appkey","token","code"
+			],
+			"properties" : {
+				"appkey" : {
+					"type" : "string",
+					"description" : " 20 Characters"
+				},
+				"token" : {
+					"type" : "string",
+					"description" : " 20 Characters"
+				},
+				"code" : {
+					"type" : "string",
+					"description" : " 5 Characters"
+				}
+			}
+		},
+		"proposal" : {
+			"required":[
+				"appkey","token","student"
+			],
+			"properties" : {
+				"appkey" : {
+					"type" : "string",
+					"description" : " 20 Characters"
+				},
+				"token" : {
+					"type" : "string",
+					"description" : " 20 Characters"
+				},
+				"student" : {
+					"type" : "string",
+					"description" : " 4 - 15 Characters, Type: Alphanumeric, dash, underscore, dot"
+				}
+			}
+		},
+		"Aunthetication" : {
+			"required":[
+				"username","password","appkey"
+			],
+			"properties" : {
+				"username" : {
+					"title":"title",
+					"description":" Format : Alphanumeric, Student's username ",
+					"required" : "true",
+					"type" : "string",
+					"enum" : ["halo_", "aku.siapa", "apa-aja"]
+				},
+				"password" : {
+					"title":"title",
+					"description":" Format : Alphanumeric, Student's password ",
+					"required": "true",
+					"type" : "string"
+				},
+				"appkey" : {
+					"type" : "string",
+					"required" : "true", 
+					"description" : "Character(50)"
+				}
+			}
+		},
+		"proposesupervisor" : {
+			"required":[
+				"appkey","token","supervisor"
+			],
+			"properties" : {
+				"appkey" : {
+					"type" : "string",
+					"required" : "true", 
+					"description" : "Character(50)"
+				},
+				"token" : {
+					"description" : " Character(20)",
+					"required" : "true",
+					"type" : "string"				
+				},
+				"supervisor" : {
+					"description" : " 4 - 15 Characters, Type: Alphanumeric, dash, underscore, dot",
+					"required": "true",
+					"type" : "string"
+				}
+			}
+		},
+		"inputcode" : {
+			"required":[
+				"appkey","token","code"
+			],
+			"properties" : {
+				"appkey" : {
+					"type" : "string",
+					"required" : "true", 
+					"description" : "Character(50)"
+				},
+				"token" : {
+					"description" : " Character(20)",
+					"required" : "true",
+					"type" : "string"				
+				},
+				"code" : {
+					"description" : " 5 Characters",
+					"required": "true",
+					"type" : "string"
+				}
+			}
+		},
+		"IsExist" : {
+			"required":[
+				"username","appkey"
+			],
+			"properties" : {
+				"username" : {
+					"title":"title",
+					"description":" Format : Alphanumeric, Student's username ",
+					"type" : "string",
+					"enum" : ["halo_", "aku.siapa", "apa-aja"]
+				},
+				"appkey" : {
+					"type" : "string",
+					"description" : "Character(50)"
+				}
+			}
+		}
+	}
+}
