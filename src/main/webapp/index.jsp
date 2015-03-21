@@ -7,7 +7,7 @@
     <meta name="description" content="App Index">
     <meta name="author" content="whildachaq@gmail.com">
     
-    <title>Semantic Web Service</title>
+    <title>Redeploy : Semantic Web Service</title>
     <link rel="shortcut icon" href="assets/dinus.png"/>
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="css/carousel.css" rel="stylesheet">
