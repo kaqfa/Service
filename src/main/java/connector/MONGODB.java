@@ -54,10 +54,10 @@ public class MONGODB {
 		resultObj.put("db_name", prop.getProperty("db_name"));
 		*/
 				
-		resultObj.put("db_host", "localhost");
+		resultObj.put("db_host", "128.199.163.105");
 		resultObj.put("db_port", "27017");
-		resultObj.put("db_user", "labfudinus");
-		resultObj.put("db_pass", "udinuslabf");
+		resultObj.put("db_user", "labf");
+		resultObj.put("db_pass", "udinus");
 		resultObj.put("db_name", "semanticwebservice");
 		return resultObj;
 	}
