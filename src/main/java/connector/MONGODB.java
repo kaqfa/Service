@@ -20,11 +20,11 @@ public class MONGODB {
 			if(jsonProp == null)
 				jsonProp = getPropValues();
 			
-			if(credential == null)
+			/*if(credential == null)
 				credential = MongoCredential.createMongoCRCredential(
 						jsonProp.get("db_user").toString(), 
 						jsonProp.get("db_name").toString(), 
-						jsonProp.get("db_pass").toString().toCharArray());
+						jsonProp.get("db_pass").toString().toCharArray());*/
 			
 			if(mongoClient == null)
 				mongoClient = new MongoClient(new ServerAddress(
