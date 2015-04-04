@@ -12,15 +12,16 @@ public class ExceptionValidation extends Exception {
 	public static final int WRONG_FILE_EXTENSION = 5;
 	public static final int WRONG_PARAMETER = 6;
 	public static final int WRONG_STUDENT_STATUS = 7;
-	public static final int EXIST = 8;
-	public static final int USERNAME_EXIST = 9;
-	public static final int NOT_EXIST = 10;
-	public static final int FIELD_NOT_EXIST = 11;
-	public static final int FILE_NOT_EXIST = 12;
-	public static final int SUPERVISOR_NOT_EXIST = 13;
-	public static final int TASK_NOT_EXIST = 14;
-	public static final int TEMPLATE_NOT_EXIST = 15;
-	public static final int USER_NOT_EXIST = 16;
+	public static final int WRONG_TASK_STATUS = 8;
+	public static final int EXIST = 9;
+	public static final int USERNAME_EXIST = 10;
+	public static final int NOT_EXIST = 11;
+	public static final int FIELD_NOT_EXIST = 12;
+	public static final int FILE_NOT_EXIST = 13;
+	public static final int SUPERVISOR_NOT_EXIST = 14;
+	public static final int TASK_NOT_EXIST = 15;
+	public static final int TEMPLATE_NOT_EXIST = 16;
+	public static final int USER_NOT_EXIST = 17;
 	
 	public ExceptionValidation(int code) {
 		super();
@@ -42,6 +43,9 @@ public class ExceptionValidation extends Exception {
 		else if (code == WRONG_STUDENT_STATUS)
 			message = "Wrong Student Status!";
 
+		else if (code == WRONG_TASK_STATUS)
+			message = "Task Already Done!";
+		
 		else if (code == WRONG_TOKEN)
 			message = "Token is Wrong.";
 

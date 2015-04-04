@@ -179,53 +179,41 @@ public class Supervisor {
 	@POST
 	@Path("/issupervisor")
 	@SuppressWarnings("unchecked")
-	public String IsSupervisor(String jsonString)
-	{
-		DBObject where_query;
-		DBObject find_objek_supervisor;
-		
+	public String IsSupervisor(String jsonString) {
 		JSONObject outputJson = new JSONObject();
-		JSONObject inputJson ;
-		String student;
-		String supervisor;
-		
-		try
-		{
+		try {
 			DB db = MONGODB.GetMongoDB();
 			DBCollection collApp = db.getCollection("application");
 			DBCollection collToken = db.getCollection("token");
 			DBCollection collSupervisor = db.getCollection("supervisor");
 			
-			inputJson = (JSONObject) JSONValue.parse(jsonString);
+			JSONObject inputJson = (JSONObject) JSONValue.parse(jsonString);
 			GeneralService.AppkeyCheck(inputJson.get("appkey").toString(), collApp);
+
+			String supervisor = GeneralService.TokenCheck(inputJson.get("token").toString(), collToken);
+			String student = inputJson.get("student").toString();
 			
-			student = inputJson.get("student").toString();
-			supervisor = GeneralService.TokenCheck(inputJson.get("token").toString(), collToken);
+			Validator.isParameterEmpty(student);
+			Validator.isParameterWrong(student, Validator.USERNAME);
 			
-			where_query = new BasicDBObject("_id", supervisor);
-			find_objek_supervisor = collSupervisor.findOne(where_query);
-			
-			if (find_objek_supervisor != null)
-			{
-				String studentString = find_objek_supervisor.get("student").toString();
-				JSONArray student_array = (JSONArray) JSONValue.parse(studentString);
-				if(student_array.contains(student)){
-					outputJson.put("code", 1);
-					outputJson.put("message", "true");
-				}else{
-					outputJson.put("code", 0);
-					outputJson.put("message", "false");
-				}
+			DBObject supervisorObject = GeneralService.GetDBObjectFromId(collSupervisor, supervisor);
+			JSONArray studentArray = (JSONArray) JSONValue.parse(supervisorObject.get("student").toString());
+			if (studentArray.contains(student)) {
+				outputJson.put("code", 2);
+				outputJson.put("message", "true");
 			}
-			else
-			{
-				throw new Exception("Supervisor not found");
+			else {
+				outputJson.put("code", 1);
+				outputJson.put("message", "false");
 			}			
 		}
-		catch (Exception ex)
-		{
+		catch (ExceptionValidation e) {
+			outputJson.put("code", 0);
+			outputJson.put("message", e.toString());
+		}
+		catch (Exception e) {
 			outputJson.put("code", -1);
-			outputJson.put("message", ex.toString());
+			outputJson.put("message", e.toString());
 		}
 
 		return outputJson.toString();
@@ -492,8 +480,7 @@ public class Supervisor {
 	@POST
 	@Path("/validation")
 	@SuppressWarnings("unchecked")
-	public String TaskValidation(String jsonString) 
-	{		
+	public String TaskValidation(String jsonString) {
 		JSONObject outputJson = new JSONObject();
 		try {
 			DB db = MONGODB.GetMongoDB();
@@ -509,41 +496,33 @@ public class Supervisor {
 			String student = inputJson.get("student").toString();
 			String taskId = inputJson.get("id_task").toString();
 			
-			DBObject query = new BasicDBObject("_id", student)
-				.append("supervisor", supervisor)
-				.append("task.id_task", taskId);
-			DBObject findOne = collStudent.findOne(query, new BasicDBObject("task.$", 1));
-			if(findOne != null){
-				DBObject ObjectId = new BasicDBObject();
-				ObjectId.put("_id", student);
-				ObjectId.put("task.id_task", taskId);
+			Validator.isParameterEmpty(student);
+			Validator.isParameterEmpty(taskId);
+			Validator.isParameterWrong(student, Validator.USERNAME);
+			Validator.isParameterWrong(taskId, Validator.TASK_TEMPLATE_ID);
+			
+			DBObject queryObject = new BasicDBObject();
+			queryObject.put("_id", student);
+			queryObject.put("supervisor", supervisor);
+			queryObject.put("task.id_task", taskId);
+			
+			DBObject projectionObject = new BasicDBObject("task.$", 1);
+			DBObject studentObject = collStudent.findOne(queryObject, projectionObject);
+			Validator.isExist(studentObject, Validator.TASK_ID);
 
-				DBObject ObjectToBeSet = new BasicDBObject();
-				JSONArray task = (JSONArray) JSONValue.parse(findOne.get("task").toString());
-				JSONObject taskObject = (JSONObject) task.get(0);
-				if(Integer.parseInt(taskObject.get("status").toString()) == 0) {
-					ObjectToBeSet.put("task.$.status", 1);
-					ObjectToBeSet.put("task.$.end_date", Service.today);
-				}
-				else if(Integer.parseInt(taskObject.get("status").toString()) == 1) {
-					ObjectToBeSet.put("task.$.status", 0);
-					ObjectToBeSet.put("task.$.end_date", null);
-				}
-				
-				DBObject ObjectQuery = new BasicDBObject();
-				ObjectQuery.put("$set", ObjectToBeSet);
-				
-				collStudent.update(ObjectId, ObjectQuery);
-				
-				outputJson.put("code", 1);
-				outputJson.put("message", "Success");
-			}else{
-				outputJson.put("code", 0);
-				outputJson.put("message", "Re-check parameter value");
-			}
-		} 
-		catch (Exception e) 
-		{
+			JSONArray taskArray = (JSONArray) JSONValue.parse(studentObject.get("task").toString());
+			JSONObject taskObject = (JSONObject) taskArray.get(0);
+			int status = (int) taskObject.get("status");
+			UpdateTaskStatus(collStudent, student, taskId, status);
+			
+			outputJson.put("code", 1);
+			outputJson.put("message", "Success");
+		}
+		catch (ExceptionValidation e) {
+			outputJson.put("code", 0);
+			outputJson.put("message", e.toString());
+		}
+		catch (Exception e) {
 			outputJson.put("code", -1);
 			outputJson.put("message", e.toString());
 		}
@@ -610,8 +589,7 @@ public class Supervisor {
 	@POST
 	@Path("/editprofile")
 	@SuppressWarnings("unchecked")
-	public String EditSupervisorProfile(String jsonString) 
-	{		
+	public String EditSupervisorProfile(String jsonString) {
 		JSONObject outputJson = new JSONObject();
 		try {
 			DB db = MONGODB.GetMongoDB();
@@ -629,32 +607,30 @@ public class Supervisor {
 			String email = inputJson.get("email").toString();
 			JSONArray field = (JSONArray) JSONValue.parse(inputJson.get("field").toString());
 
-			for (int i = 0; i < field.size(); i++) {
-				DBObject queryField = new BasicDBObject("_id", field.get(i).toString());
-				DBObject checkField = collField.findOne(queryField);
-				if(checkField == null) throw new Exception("Cannot find Expertise in Expertise database!!");
-			}
+			Validator.isParameterEmpty(field);
+			Validator.isParameterWrong(address, Validator.ADDRESS);
+			Validator.isParameterWrong(handphone, Validator.PHONE_NUMBER);
+			Validator.isParameterWrong(email, Validator.EMAIL);
+			Validator.isParameterWrong(collField, field);
 			
-			DBObject ObjectId = new BasicDBObject();
-			DBObject ObjectSet = new BasicDBObject();
-			DBObject ObjectQuery = new BasicDBObject();
+			DBObject queryObject = new BasicDBObject("_id", username);
+			DBObject objectToSet = new BasicDBObject();
+			objectToSet.put("address", address);
+			objectToSet.put("handphone", handphone);
+			objectToSet.put("email", email);
+			objectToSet.put("field", field);
 			
-			ObjectId.put("_id", username);
-			
-			ObjectSet.put("address", address);
-			ObjectSet.put("handphone", handphone);
-			ObjectSet.put("email", email);
-			ObjectSet.put("field", field);
-			
-			ObjectQuery.put("$set", ObjectSet);
-			
-			collSupervisor.update(ObjectId, ObjectQuery);
+			DBObject updateObject = new BasicDBObject("$set", objectToSet);
+			collSupervisor.update(queryObject, updateObject);
 			
 			outputJson.put("code", 1);
 			outputJson.put("message", "Success");
-		} 
-		catch (Exception e) 
-		{
+		}
+		catch (ExceptionValidation e) {
+			outputJson.put("code", 0);
+			outputJson.put("message", e.toString());
+		}
+		catch (Exception e) {
 			outputJson.put("code", -1);
 			outputJson.put("message", e.toString());
 		}
@@ -886,5 +862,24 @@ public class Supervisor {
 		DBObject objectToPush = new BasicDBObject("student", student);
 		updateObject = new BasicDBObject("$push", objectToPush);
 		collSupervisor.update(queryObject, updateObject);
+	}
+	
+	private void UpdateTaskStatus (DBCollection collStudent, String student, String taskId, int status) {
+		DBObject queryObject = new BasicDBObject();
+		queryObject.put("_id", student);
+		queryObject.put("task.id_task", taskId);
+
+		DBObject objectToSet = new BasicDBObject();
+		if (status == 0) {
+			objectToSet.put("task.$.status", 1);
+			objectToSet.put("task.$.end_date", Service.today);
+		}
+		else if (status == 1) {
+			objectToSet.put("task.$.status", 0);
+			objectToSet.put("task.$.end_date", null);
+		}
+		
+		DBObject updateObject = new BasicDBObject("$set", objectToSet);
+		collStudent.update(queryObject, updateObject);
 	}
 }

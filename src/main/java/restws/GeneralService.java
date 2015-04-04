@@ -1,5 +1,8 @@
 package restws;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import javax.servlet.http.Part;
@@ -91,22 +94,23 @@ public class GeneralService {
 			throw new ExceptionValidation(ExceptionValidation.WRONG_APPKEY);
 	}
 
-	public static String TokenCheck(String token, DBCollection collToken) throws ExceptionValidation {
+	public static String TokenCheck(String token, DBCollection collToken) throws ExceptionValidation, ParseException {
 		String output = "";
 		Validator.isParameterWrong(token, Validator.TOKEN);
 		DBObject tokenObject = collToken.findOne(new BasicDBObject("token", token));
+		String oneMonth = DateUtils.addMonths(StringtoDate(Service.today), Service.tokenLength).toString();
 		if (tokenObject == null)
 			throw new ExceptionValidation(ExceptionValidation.WRONG_TOKEN);
 		else {
-			Date valid_date = (Date) tokenObject.get("valid_date");
-			if (Service.today.after(valid_date))
+			Date valid_date = StringtoDate((String) tokenObject.get("valid_date"));
+			if (StringtoDate(Service.today).after(valid_date))
 				throw new ExceptionValidation(ExceptionValidation.TOKEN_EXPIRED);
 			else {
 				DBObject queryObject = new BasicDBObject();
 				queryObject.put("_id", tokenObject.get("_id"));
 				
 				DBObject objectToSet = new BasicDBObject();
-				objectToSet.put("valid_date", DateUtils.addMonths(Service.today, Service.tokenLength));
+				objectToSet.put("valid_date", oneMonth);
 				
 				DBObject updateObject = new BasicDBObject();
 				updateObject.put("$set", objectToSet);
@@ -204,5 +208,10 @@ public class GeneralService {
 			else index++;
 		} while(index <= listArray.size() && !isFound);
 		return index;
+	}
+	
+	public static Date StringtoDate(String stringDate) throws ParseException {
+		DateFormat format = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy");
+		return format.parse(stringDate);
 	}
 }

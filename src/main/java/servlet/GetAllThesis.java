@@ -13,13 +13,11 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import restws.GeneralService;
 import restws.Service;
 
-import restws.GeneralService;
-import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
 
 import connector.MONGODB;
 import exception.ExceptionValidation;

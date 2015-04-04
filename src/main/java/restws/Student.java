@@ -400,8 +400,7 @@ public class Student {
 	@POST
 	@Path("/editprofile")
 	@SuppressWarnings("unchecked")
-	public String EditStudentProfile(String jsonString) 
-	{		
+	public String EditStudentProfile(String jsonString) {		
 		JSONObject outputJson = new JSONObject();
 		try {
 			DB db = MONGODB.GetMongoDB();
@@ -417,25 +416,27 @@ public class Student {
 			String handphone = inputJson.get("handphone").toString();
 			String email = inputJson.get("email").toString();
 			
-			DBObject ObjectId = new BasicDBObject();
-			DBObject ObjectSet = new BasicDBObject();
-			DBObject ObjectQuery = new BasicDBObject();
+			Validator.isParameterWrong(address, Validator.ADDRESS);
+			Validator.isParameterWrong(handphone, Validator.PHONE_NUMBER);
+			Validator.isParameterWrong(email, Validator.EMAIL);
 			
-			ObjectId.put("_id", username);
-			
-			ObjectSet.put("address", address);
-			ObjectSet.put("handphone", handphone);
-			ObjectSet.put("email", email);
-			
-			ObjectQuery.put("$set", ObjectSet);
-			
-			collStudent.update(ObjectId, ObjectQuery);
+			DBObject queryObject = new BasicDBObject("_id", username);
+			DBObject objectToSet = new BasicDBObject();
+			objectToSet.put("address", address);
+			objectToSet.put("handphone", handphone);
+			objectToSet.put("email", email);
+
+			DBObject updateObject = new BasicDBObject("$set", objectToSet);
+			collStudent.update(queryObject, updateObject);
 			
 			outputJson.put("code", 1);
 			outputJson.put("message", "Success");
-		} 
-		catch (Exception e) 
-		{
+		}
+		catch (ExceptionValidation e) {
+			outputJson.put("code", 0);
+			outputJson.put("message", e.toString());
+		}
+		catch (Exception e) {
 			outputJson.put("code", -1);
 			outputJson.put("message", e.toString());
 		}
@@ -444,7 +445,7 @@ public class Student {
 	}
 
 	private void AddToHistory(DBCollection collStudent, DBObject queryObject, DBObject thesisObject) {
-		thesisObject.put("change_date", Service.today);
+		thesisObject.put("save_date", Service.today);
 		DBObject objectToPush = new BasicDBObject("history", thesisObject);
 		DBObject updateObject = new BasicDBObject("$push", objectToPush);
 		collStudent.update(queryObject, updateObject);
@@ -466,32 +467,33 @@ public class Student {
 	@SuppressWarnings("unchecked")
 	private void CopyTask(DBCollection collStudent, DBCollection collSupervisor, String supervisor,
 			String  student, String code) throws ExceptionValidation {
-		JSONArray tasks = GetTaskArray(collSupervisor, supervisor, code);
-		for (int i = 0; i < tasks.size(); i++) {
-			JSONObject task = (JSONObject) tasks.get(i);
-			int duration = Integer.parseInt(task.get("duration").toString());
-			JSONArray files = (JSONArray) task.get("file");
-			JSONArray fileToSet = new JSONArray();
+		JSONArray taskArray = GetTaskArray(collSupervisor, supervisor, code);
+		for (int i = 0; i < taskArray.size(); i++) {
+			JSONObject taskObject = (JSONObject) taskArray.get(i);
+			int duration = (int) taskObject.get("duration");
+			JSONArray fileArray = (JSONArray) taskObject.get("file");
+			JSONArray files = new JSONArray();
 			
-			for (int y = 0; y < files.size(); y++) {
-				JSONObject file = (JSONObject) files.get(y);
-				file.put("upload_date", (Date) JSON.parse(file.get("upload_date").toString()));
-				fileToSet.add(file);
+			for (int y = 0; y < fileArray.size(); y++) {
+				JSONObject fileObject = (JSONObject) fileArray.get(y);
+				fileObject.put("by", supervisor);
+				fileObject.replace("upload_date", (Date) JSON.parse(fileObject.get("upload_date").toString()));
+				files.add(fileObject);
 			}
-		
-			task.put("id_task", GeneralService.GetTaskID(collStudent, student));
-			task.put("status", 0);
-			task.put("duration", duration);
-			task.put("created_date", Service.today);
-			task.put("end_date", null);
-			task.put("file", fileToSet);
-			task.put("comment", new JSONArray());
+			
+			taskObject.put("id_task", GeneralService.GetTaskID(collStudent, student));
+			taskObject.put("status", 0);
+			taskObject.replace("duration", duration);
+			taskObject.put("created_date", Service.today);
+			taskObject.put("end_date", null);
+			taskObject.replace("file", files);
+			taskObject.put("comment", new JSONArray());
 			
 			DBObject queryObject = new BasicDBObject();
 			queryObject.put("_id", student);
 			
 			DBObject objectToPush = new BasicDBObject();
-			objectToPush.put("task", task);
+			objectToPush.put("task", taskObject);
 			
 			DBObject updateObject = new BasicDBObject();
 			updateObject.put("$push", objectToPush);

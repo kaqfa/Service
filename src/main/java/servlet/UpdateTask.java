@@ -19,9 +19,9 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
+import restws.GeneralService;
 import restws.Service;
 
-import restws.GeneralService;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -112,8 +112,9 @@ public class UpdateTask extends HttpServlet {
 		JSONArray removed = (JSONArray) JSONValue.parse(filesToRemove);
 		for(int i = 0;i<removed.size();i++){
 			String fileId = removed.get(i).toString();
-			DBObject objectToSet = new BasicDBObject("task.$.file",fileId);
-			DBObject objectSet = new BasicDBObject("$pull",objectToSet);
+			DBObject objectFileId = new BasicDBObject("fileid", fileId);
+			DBObject objectToSet = new BasicDBObject("task.$.file", objectFileId);
+			DBObject objectSet = new BasicDBObject("$pull", objectToSet);
 			collStudent.update(objectFind, objectSet);
 		}
 	}

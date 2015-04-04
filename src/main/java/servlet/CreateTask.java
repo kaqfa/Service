@@ -19,9 +19,9 @@ import javax.servlet.http.Part;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import restws.GeneralService;
 import restws.Service;
 
-import restws.GeneralService;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -87,7 +87,7 @@ public class CreateTask extends HttpServlet {
 			int status = (int) studentObject.get("status");
 			Validator.isStudentStatus(status, Validator.STUDENT_STATUS_ACTIVE);
 			
-			JSONArray files = UploadFile(request.getParts(), collFile);
+			JSONArray files = UploadFile(request.getParts(), collFile, supervisor);
 			UpdateStudent(collStudent, queryObject, student, name, description, duration, files);
 
 			outputJson.put("code", 1);
@@ -132,7 +132,7 @@ public class CreateTask extends HttpServlet {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private JSONArray UploadFile(Collection<Part> parts, DBCollection collFile) throws IOException {
+	private JSONArray UploadFile(Collection<Part> parts, DBCollection collFile, String supervisor) throws IOException {
 		JSONArray files = new JSONArray();
 		for (Part part : parts) {
 			if(part.getName().startsWith("file")) {
@@ -144,12 +144,12 @@ public class CreateTask extends HttpServlet {
 					DBObject fileObject = new BasicDBObject();
 					fileObject.put("fileid", fileID);
 					fileObject.put("filename", fileName);
-					fileObject.put("upload_date", new Date());
+					fileObject.put("by", supervisor);
+					fileObject.put("upload_date", Service.today);
 					files.add(fileObject);
 					
-					File uploads = new File(dirPath);
-					File file = new File(uploads, fileID);
-					Files.copy(input, file.toPath());
+					File targetFile = new File(dirPath, fileID);
+					Files.copy(input, targetFile.toPath());
 				}
 			}
 		}

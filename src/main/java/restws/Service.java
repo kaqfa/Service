@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.text.ParseException;
 import java.util.Date;
 import java.util.regex.Pattern;
 
@@ -45,7 +46,7 @@ public class Service {
 
 	public static final String dirAttachment = "/files";
 	public static final String dirFinalWork = "/final";
-	public static final Date today = new Date();
+	public static final String today = new Date().toString();
 	public static final int tokenLength = 1;
 	
 	@POST
@@ -481,10 +482,9 @@ public class Service {
 	@GET
 	@Path("/search/{keysearch}/{appkey}/{token}")
 	@SuppressWarnings("unchecked")
-	public String SearchSupervisor(@PathParam("keysearch") String key, @PathParam("appkey") String appkey, @PathParam("token") String token) 
-	{		
+	public String SearchSupervisor(@PathParam("keysearch") String key, @PathParam("appkey") String appkey,
+			@PathParam("token") String token) {
 		JSONObject outputJson = new JSONObject();
-		JSONArray outputData = new JSONArray();
 		try {
 			DB db = MONGODB.GetMongoDB();
 			DBCollection collApp = db.getCollection("application");
@@ -493,30 +493,33 @@ public class Service {
 			
 			GeneralService.AppkeyCheck(appkey, collApp);
 			GeneralService.TokenCheck(token, collToken);
+
+			Validator.isParameterEmpty(key);
+			Validator.isParameterWrong(key, Validator.FIELD_NAME);
 			
-			DBCursor cursor = collSupervisor.find(new BasicDBObject("field", java.util.regex.Pattern.compile(key)));
-			while (cursor.hasNext()) {
-			    DBObject currObj = cursor.next();
-			    JSONObject tempObj = (JSONObject) JSONValue.parse(currObj.toString());
-			    outputData.add(tempObj);
-			}
-			cursor.close();
+			JSONArray supervisorArray = new JSONArray();
+			DBObject queryObject = new BasicDBObject("field", Pattern.compile(key));
+			DBCursor supervisorList = collSupervisor.find(queryObject);
+			Validator.isExist(supervisorList, Validator.GENERAL);
 			
-			if(cursor.size() == 0) {
-				outputJson.put("code", 0);
-				outputJson.put("message", "No Data");
-				outputJson.put("data", null);
+			while (supervisorList.hasNext()) {
+				supervisorArray.add(supervisorList.next());
 			}
-			else {
-				outputJson.put("code", 1);
-				outputJson.put("message", "Success");
-				outputJson.put("data", outputData);
-			}
-		} 
-		catch (Exception e) 
-		{
+			supervisorList.close();
+			
+			outputJson.put("code", 1);
+			outputJson.put("message", "Success");
+			outputJson.put("data", supervisorArray);
+		}
+		catch (ExceptionValidation e) {
+			outputJson.put("code", 0);
+			outputJson.put("message", e.toString());
+			outputJson.put("data", null);
+		}
+		catch (Exception e) {
 			outputJson.put("code", -1);
 			outputJson.put("message", e.toString());
+			outputJson.put("data", null);
 		}
 
 		return outputJson.toString();
@@ -525,10 +528,9 @@ public class Service {
 	@GET
 	@Path("/getgraduated/{supervisor}/{appkey}/{token}")
 	@SuppressWarnings("unchecked")
-	public String GetGraduated(@PathParam("supervisor") String supervisor, @PathParam("appkey") String appkey,
-			@PathParam("token") String token) {		
+	public String GetGraduateStudent(@PathParam("supervisor") String supervisor, @PathParam("appkey") String appkey,
+			@PathParam("token") String token) {
 		JSONObject outputJson = new JSONObject();
-		JSONArray outputData = new JSONArray();
 		try {
 			DB db = MONGODB.GetMongoDB();
 			DBCollection collApp = db.getCollection("application");
@@ -539,32 +541,35 @@ public class Service {
 			GeneralService.AppkeyCheck(appkey, collApp);
 			GeneralService.TokenCheck(token, collToken);
 			
-			DBObject supervisorObj = GeneralService.GetDBObjectFromId(collSupervisor, supervisor);
-			JSONArray arr = (JSONArray) JSONValue.parse(supervisorObj.get("graduate").toString());
+			Validator.isParameterEmpty(supervisor);
+			Validator.isParameterWrong(supervisor, Validator.USERNAME);
 			
-			DBCursor cursor = collStudent.find(new BasicDBObject("_id", new BasicDBObject("$in", arr)));
-			while (cursor.hasNext()) {
-			    DBObject currObj = cursor.next();
-			    JSONObject tempObj = (JSONObject) JSONValue.parse(currObj.toString());
-			    outputData.add(tempObj);
-			}
-			cursor.close();
+			DBObject supervisorObject = GeneralService.GetDBObjectFromId(collSupervisor, supervisor);
+			JSONArray studentObject = (JSONArray) JSONValue.parse(supervisorObject.get("graduate").toString());
+			JSONArray graduateArray = new JSONArray();
 			
-			if(outputData.size() == 0) {
-				outputJson.put("code", 0);
-				outputJson.put("message", "No Data");
-				outputJson.put("data", null);
+			DBObject queryObject = new BasicDBObject("_id", new BasicDBObject("$in", studentObject));
+			DBCursor studentList = collStudent.find(queryObject);
+			Validator.isExist(studentList, Validator.GENERAL);
+			
+			while (studentList.hasNext()) {
+			    graduateArray.add(studentList.next());
 			}
-			else {
-				outputJson.put("code", 1);
-				outputJson.put("message", "Success");
-				outputJson.put("data", outputData);
-			}
-		} 
-		catch (Exception e) 
-		{
+			studentList.close();
+			
+			outputJson.put("code", 1);
+			outputJson.put("message", "Success");
+			outputJson.put("data", graduateArray);
+		}
+		catch (ExceptionValidation e) {
+			outputJson.put("code", 0);
+			outputJson.put("message", e.toString());
+			outputJson.put("data", null);
+		}
+		catch (Exception e) {
 			outputJson.put("code", -1);
 			outputJson.put("message", e.toString());
+			outputJson.put("data", null);
 		}
 
 		return outputJson.toString();
@@ -573,7 +578,7 @@ public class Service {
 	@GET
 	@Path("/getungraduated/{supervisor}/{appkey}/{token}")
 	@SuppressWarnings("unchecked")
-	public String GetUnGraduated(@PathParam("supervisor") String supervisor, @PathParam("appkey") String appkey,
+	public String GetUngraduateStudent(@PathParam("supervisor") String supervisor, @PathParam("appkey") String appkey,
 			@PathParam("token") String token) {		
 		JSONObject outputJson = new JSONObject();
 		JSONArray outputData = new JSONArray();
@@ -756,25 +761,26 @@ public class Service {
 		return i;
 	}
 	
-	private String GetToken(DBCollection collToken, String username) {
+	private String GetToken(DBCollection collToken, String username) throws ParseException {
 		String token = "";
 		DBObject tokenObject = GeneralService.GetDBObjectFromId(collToken, username);
+		String oneMonth = DateUtils.addMonths(GeneralService.StringtoDate(today), tokenLength).toString();
 		if (tokenObject == null) {
 			token = GeneralService.GetTokenID(collToken);
 			
 			DBObject insertObject = new BasicDBObject();
 			insertObject.put("_id", username);
 			insertObject.put("token", token);
-			insertObject.put("valid_date", DateUtils.addMonths(today, tokenLength));
+			insertObject.put("valid_date", oneMonth);
 			
 			collToken.insert(insertObject);
 		}
 		else {
-			Date validDate = (Date) tokenObject.get("valid_date");
-			if (today.before(validDate)) {
+			Date validDate = GeneralService.StringtoDate((String) tokenObject.get("valid_date"));
+			if (GeneralService.StringtoDate(today).before(validDate)) {
 				token = tokenObject.get("token").toString();
 				DBObject queryObject = new BasicDBObject("_id", username);
-				DBObject objectToSet = new BasicDBObject("valid_date", DateUtils.addMonths(today, tokenLength));
+				DBObject objectToSet = new BasicDBObject("valid_date", oneMonth);
 				DBObject updateObject = new BasicDBObject("$set", objectToSet);
 				collToken.update(queryObject, updateObject);
 			}
@@ -784,7 +790,7 @@ public class Service {
 				
 				DBObject objectToSet = new BasicDBObject();
 				objectToSet.put("token", token);
-				objectToSet.put("valid_date", DateUtils.addMonths(today, tokenLength));
+				objectToSet.put("valid_date", oneMonth);
 				
 				DBObject updateObject = new BasicDBObject("$set", objectToSet);
 				collToken.update(queryObject, updateObject);
