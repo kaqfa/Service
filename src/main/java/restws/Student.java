@@ -1,7 +1,5 @@
 package restws;
 
-import java.util.Date;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -16,7 +14,6 @@ import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import com.mongodb.util.JSON;
 
 import connector.MONGODB;
 import exception.ExceptionValidation;
@@ -477,7 +474,6 @@ public class Student {
 			for (int y = 0; y < fileArray.size(); y++) {
 				JSONObject fileObject = (JSONObject) fileArray.get(y);
 				fileObject.put("by", supervisor);
-				fileObject.replace("upload_date", (Date) JSON.parse(fileObject.get("upload_date").toString()));
 				files.add(fileObject);
 			}
 			

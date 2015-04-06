@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.util.Collection;
-import java.util.Date;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
@@ -120,7 +119,7 @@ public class CreateTask extends HttpServlet {
 		taskObject.put("id_task", GeneralService.GetTaskID(collStudent, student));
 		taskObject.put("status", 0);
 		taskObject.put("duration", duration);
-		taskObject.put("created_date", new Date());
+		taskObject.put("created_date", Service.today);
 		taskObject.put("end_date", null);
 		taskObject.put("file", files);
 		taskObject.put("comment", new JSONArray());

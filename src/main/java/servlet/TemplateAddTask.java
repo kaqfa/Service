@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Date;
 
 import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -29,6 +30,7 @@ import com.mongodb.DBObject;
 import connector.MONGODB;
 
 @WebServlet("/rest/su/addtask")
+@MultipartConfig(maxFileSize = 1024*1024*5)
 public class TemplateAddTask extends HttpServlet {
 	private static final long serialVersionUID = 1L;
       

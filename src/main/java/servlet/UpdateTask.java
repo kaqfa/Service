@@ -6,9 +6,9 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.util.Collection;
-import java.util.Date;
 
 import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -28,21 +28,27 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 
 import connector.MONGODB;
+import exception.Validator;
 
 @WebServlet("/rest/su/updatetask")
+@MultipartConfig(maxFileSize = 1024*1024*5)
 public class UpdateTask extends HttpServlet {
 	private static final long serialVersionUID = 1L;
-       
-    public UpdateTask() {
-        super();
-    }
+	
+	public UpdateTask() {
+		super();
+	}
 
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {}
+	protected void doGet(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+		
+	}
 
 	@SuppressWarnings("unchecked")
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		PrintWriter out = response.getWriter();
-		JSONObject outputJsonObj = new JSONObject();
+	protected void doPost(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+		PrintWriter outputResponse = response.getWriter();
+		JSONObject outputJson = new JSONObject();
 		try {
 			DB db = MONGODB.GetMongoDB();
 			DBCollection collApplication = db.getCollection("application");
@@ -53,33 +59,45 @@ public class UpdateTask extends HttpServlet {
 			String appKey = request.getParameter("appkey");
 			String token = request.getParameter("token");
 			
-			String studentId = request.getParameter("student");
+			String student = request.getParameter("student");
 			String taskId = request.getParameter("id_task");
-			
 			String name = request.getParameter("name");
 			String description = request.getParameter("description");
-			int duration = Integer.parseInt(request.getParameter("duration"));
+			String stringDuration = request.getParameter("duration");
+			
+			Validator.isParameterEmpty(student);
+			Validator.isParameterEmpty(taskId);
+			Validator.isParameterEmpty(name);
+			
+			Validator.isParameterWrong(student, Validator.USERNAME);
+			Validator.isParameterWrong(taskId, Validator.TASK_TEMPLATE_ID);
+			Validator.isParameterWrong(name, Validator.TASK_TEMPLATE_NAME);
+			Validator.isParameterWrong(description, Validator.TASK_TEMPLATE_DESCRIPTION);
+			Validator.isParameterWrong(stringDuration, Validator.TASK_DURATION);
+			
+			int duration = GetDuration(stringDuration);
 			
 			String username = GeneralService.TokenCheck(token, collToken);		
 			GeneralService.AppkeyCheck(appKey, collApplication);
 	
-			DBObject objectFind	= new BasicDBObject("_id",studentId)
+			DBObject objectFind	= new BasicDBObject("_id",student)
 				.append("task.id_task", taskId);
 			
 			UpdateStudentTask(collStudent, objectFind, name, description, duration);
-			if(!request.getParameter("remove").isEmpty()) RemoveFileTask(request.getParameter("remove"), collStudent, objectFind);
+			if (!request.getParameter("remove").isEmpty())
+				RemoveFileTask(request.getParameter("remove"), collStudent, objectFind);
 			UploadFile(request.getParts(), collFile, collStudent, objectFind);
 			
-			outputJsonObj.put("code", 1);
-		    outputJsonObj.put("message", "success");
-		    outputJsonObj.put("username", username);
+			outputJson.put("code", 1);
+		    outputJson.put("message", "success");
+		    outputJson.put("username", username);
 		    
 		} catch (Exception e) {
-			outputJsonObj.put("code", -1);
-		    outputJsonObj.put("message", e.toString());
+			outputJson.put("code", -1);
+		    outputJson.put("message", e.toString());
 		}
 
-		out.write(outputJsonObj.toString());
+		outputResponse.write(outputJson.toString());
 	}
 
 	private void UploadFile(Collection<Part> parts,DBCollection collFile, DBCollection collStudent,
@@ -94,7 +112,7 @@ public class UpdateTask extends HttpServlet {
 			        DBObject fileObj = new BasicDBObject();
 			        fileObj.put("fileid", fileID);
 					fileObj.put("filename", fileName);
-					fileObj.put("upload_date", new Date());
+					fileObj.put("upload_date", Service.today);
 					
 					DBObject objectToSet= new BasicDBObject("task.$.file",fileObj);
 					DBObject objectSet= new BasicDBObject("$push",objectToSet);
@@ -106,6 +124,13 @@ public class UpdateTask extends HttpServlet {
 		        }
 			}
 		}
+	}
+
+	private int GetDuration(String stringDuration) {
+		if (stringDuration == null || stringDuration.isEmpty())
+			return -1;
+		else
+			return Integer.parseInt(stringDuration);
 	}
 
 	private void RemoveFileTask(String filesToRemove, DBCollection collStudent, DBObject objectFind) {

@@ -4,9 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
-import java.util.Date;
 
 import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -24,11 +24,11 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
-import com.mongodb.util.JSON;
 
 import connector.MONGODB;
 
 @WebServlet("/rest/su/claim")
+@MultipartConfig(maxFileSize = 1024*1024*5)
 public class ValidationFinalReport extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 
@@ -110,8 +110,8 @@ public class ValidationFinalReport extends HttpServlet {
 		DBObject objectFinal = new BasicDBObject();
 		objectFinal.put("filename", claimObject.get("filename"));
 		objectFinal.put("fileid", claimObject.get("fileid"));
-		objectFinal.put("upload_date", (Date) JSON.parse(claimObject.get("upload_date").toString()));
-		objectFinal.put("accept_date", new Date());
+		objectFinal.put("upload_date", claimObject.get("upload_date"));
+		objectFinal.put("accept_date", Service.today);
 		
 		DBObject objectToSet = new BasicDBObject();
 		objectToSet.put("status", Student.STATUS_GRADUATE);

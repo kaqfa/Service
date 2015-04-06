@@ -457,7 +457,7 @@ public class Service {
 			else if(user.equals("supervisor")) {
 				DBObject supervisorObject = collSupervisor.findOne(objectId);
 				if(supervisorObject.get("password").equals(GeneralService.md5(oldPassword))) {
-					collStudent.update(objectId, objectSet);
+					collSupervisor.update(objectId, objectSet);
 
 					outputJson.put("code", 1);
 					outputJson.put("message", "Success");
@@ -545,15 +545,16 @@ public class Service {
 			Validator.isParameterWrong(supervisor, Validator.USERNAME);
 			
 			DBObject supervisorObject = GeneralService.GetDBObjectFromId(collSupervisor, supervisor);
-			JSONArray studentObject = (JSONArray) JSONValue.parse(supervisorObject.get("graduate").toString());
+			JSONArray studentGraduateArray = (JSONArray) JSONValue.parse(supervisorObject.get("graduate").toString());
 			JSONArray graduateArray = new JSONArray();
 			
-			DBObject queryObject = new BasicDBObject("_id", new BasicDBObject("$in", studentObject));
+			DBObject queryObject = new BasicDBObject("_id", new BasicDBObject("$in", studentGraduateArray));
 			DBCursor studentList = collStudent.find(queryObject);
 			Validator.isExist(studentList, Validator.GENERAL);
 			
 			while (studentList.hasNext()) {
-			    graduateArray.add(studentList.next());
+				JSONObject studentObject = (JSONObject) JSONValue.parse(studentList.next().toString());
+				graduateArray.add(studentObject);
 			}
 			studentList.close();
 			
@@ -581,7 +582,6 @@ public class Service {
 	public String GetUngraduateStudent(@PathParam("supervisor") String supervisor, @PathParam("appkey") String appkey,
 			@PathParam("token") String token) {		
 		JSONObject outputJson = new JSONObject();
-		JSONArray outputData = new JSONArray();
 		try {
 			DB db = MONGODB.GetMongoDB();
 			DBCollection collApp = db.getCollection("application");
@@ -592,30 +592,33 @@ public class Service {
 			GeneralService.AppkeyCheck(appkey, collApp);
 			GeneralService.TokenCheck(token, collToken);
 			
-			DBObject supervisorObj = GeneralService.GetDBObjectFromId(collSupervisor, supervisor);
-			JSONArray arr = (JSONArray) JSONValue.parse(supervisorObj.get("student").toString());
+			Validator.isParameterEmpty(supervisor);
+			Validator.isParameterWrong(supervisor, Validator.USERNAME);
 			
-			DBCursor cursor = collStudent.find(new BasicDBObject("_id", new BasicDBObject("$in", arr)));
-			while (cursor.hasNext()) {
-			    DBObject currObj = cursor.next();
-			    JSONObject tempObj = (JSONObject) JSONValue.parse(currObj.toString());
-			    outputData.add(tempObj);
-			}
-			cursor.close();
+			DBObject supervisorObject = GeneralService.GetDBObjectFromId(collSupervisor, supervisor);
+			JSONArray studentUngraduateArray = (JSONArray) JSONValue.parse(supervisorObject.get("student").toString());
+			JSONArray ungraduateArray = new JSONArray();
 			
-			if(outputData.size() == 0) {
-				outputJson.put("code", 0);
-				outputJson.put("message", "No Data");
-				outputJson.put("data", null);
+			DBObject queryObject = new BasicDBObject("_id", new BasicDBObject("$in", studentUngraduateArray));
+			DBCursor studentList = collStudent.find(queryObject);
+			Validator.isExist(studentList, Validator.GENERAL);
+			
+			while (studentList.hasNext()) {
+				JSONObject studentObject = (JSONObject) JSONValue.parse(studentList.next().toString());
+				ungraduateArray.add(studentObject);
 			}
-			else {
-				outputJson.put("code", 1);
-				outputJson.put("message", "Success");
-				outputJson.put("data", outputData);
-			}
+			studentList.close();
+			
+			outputJson.put("code", 1);
+			outputJson.put("message", "Success");
+			outputJson.put("data", ungraduateArray);
 		}
-		catch (Exception e) 
-		{
+		catch (ExceptionValidation e) {
+			outputJson.put("code", 0);
+			outputJson.put("message", e.toString());
+			outputJson.put("data", null);
+		}
+		catch (Exception e) {
 			outputJson.put("code", -1);
 			outputJson.put("message", e.toString());
 		}
@@ -809,7 +812,7 @@ public class Service {
 		else if (supervisorObject != null)
 			return "supervisor";
 		else
-			return null;
+			return "";
 	}
 	
 	private void isDataExist(DBObject data) throws ExceptionValidation {
