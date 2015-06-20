@@ -61,8 +61,7 @@ public class TemplateAddTask extends HttpServlet {
 			String templateCode = request.getParameter("template");
 	        String taskname = request.getParameter("name");
 	        String taskDescription = request.getParameter("description");
-	        int taskDuration = Integer.parseInt(request.getParameter("duration"));
-	        Date now = new Date();
+	        int taskDuration = GetDuration(request.getParameter("duration"));
 	        JSONArray files = new JSONArray();
 	        
 			Collection<Part> parts = request.getParts();
@@ -78,7 +77,7 @@ public class TemplateAddTask extends HttpServlet {
 	    		        BasicDBObject obj = new BasicDBObject()
 	    		        	.append("fileid",fileID)
 	    		        	.append("filename", fileName)
-	    		        	.append("upload_date", now);
+	    		        	.append("upload_date", Service.today);
 	    		        files.add(obj);
 	    		        
 	    	            Files.copy(input, file.toPath());
@@ -114,6 +113,13 @@ public class TemplateAddTask extends HttpServlet {
 		}
 
 		out.write(output_json.toString());
+	}
+	
+	private int GetDuration(String stringDuration) {
+		if (stringDuration == null || stringDuration.isEmpty())
+			return -1;
+		else
+			return Integer.parseInt(stringDuration);
 	}
 
 }

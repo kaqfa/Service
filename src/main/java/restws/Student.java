@@ -385,10 +385,12 @@ public class Student {
 		catch (ExceptionValidation e) {
 			outputJson.put("code", 0);
 			outputJson.put("message", e.toString());
+			e.printStackTrace();
 		}
 		catch (Exception e) {
 			outputJson.put("code", -1);
 			outputJson.put("message", e.toString());
+			e.printStackTrace();
 		}
 
 		return outputJson.toString();
@@ -467,7 +469,7 @@ public class Student {
 		JSONArray taskArray = GetTaskArray(collSupervisor, supervisor, code);
 		for (int i = 0; i < taskArray.size(); i++) {
 			JSONObject taskObject = (JSONObject) taskArray.get(i);
-			int duration = (int) taskObject.get("duration");
+			int duration = (int) (long) taskObject.get("duration");
 			JSONArray fileArray = (JSONArray) taskObject.get("file");
 			JSONArray files = new JSONArray();
 			

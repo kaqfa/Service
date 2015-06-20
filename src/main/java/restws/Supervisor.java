@@ -512,7 +512,7 @@ public class Supervisor {
 
 			JSONArray taskArray = (JSONArray) JSONValue.parse(studentObject.get("task").toString());
 			JSONObject taskObject = (JSONObject) taskArray.get(0);
-			int status = (int) taskObject.get("status");
+			int status = (int) (long) taskObject.get("status");
 			UpdateTaskStatus(collStudent, student, taskId, status);
 			
 			outputJson.put("code", 1);

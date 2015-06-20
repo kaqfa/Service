@@ -60,7 +60,7 @@ public class UpdateTaskTemplate extends HttpServlet {
 			String oldName = request.getParameter("oldname");
 			String newName = request.getParameter("newname");
 			String description = request.getParameter("description");
-			int duration = Integer.parseInt(request.getParameter("duration"));
+			int duration = GetDuration(request.getParameter("duration"));
 			
 			GeneralService.AppkeyCheck(appKey, collApplication);
 	
@@ -100,7 +100,7 @@ public class UpdateTaskTemplate extends HttpServlet {
 			        DBObject fileObject = new BasicDBObject();
 			        fileObject.put("fileid", fileID);
 					fileObject.put("filename", fileName);
-					fileObject.put("upload_date", new Date());
+					fileObject.put("upload_date", Service.today);
 					
 		            DBObject objectToSet = new BasicDBObject("template.$.task."+index+".file", fileObject);
 		            DBObject objectSet = new BasicDBObject("$push", objectToSet);
@@ -143,5 +143,12 @@ public class UpdateTaskTemplate extends HttpServlet {
 		JSONArray taskArray = (JSONArray) templateObject.get("task");
 		
 		return GeneralService.GetIndexArray(taskArray, "name", taskId);
+	}
+	
+	private int GetDuration(String stringDuration) {
+		if (stringDuration == null || stringDuration.isEmpty())
+			return -1;
+		else
+			return Integer.parseInt(stringDuration);
 	}
 }

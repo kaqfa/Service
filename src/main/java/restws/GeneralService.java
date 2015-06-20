@@ -4,6 +4,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 import javax.servlet.http.Part;
 import javax.ws.rs.POST;
@@ -211,7 +212,7 @@ public class GeneralService {
 	}
 	
 	public static Date StringtoDate(String stringDate) throws ParseException {
-		DateFormat format = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy");
+		DateFormat format = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy",Locale.US);
 		return format.parse(stringDate);
 	}
 }

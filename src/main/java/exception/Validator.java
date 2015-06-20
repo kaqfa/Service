@@ -2,6 +2,7 @@ package exception;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -88,8 +89,9 @@ public class Validator {
 		if (validation == null ||
 				(validation instanceof String && ((String) validation).isEmpty()) ||
 				(validation instanceof JSONArray && ((JSONArray) validation).isEmpty()) ||
-				(validation instanceof Part && ((Part) validation) == null) ||
-				(validation instanceof File && !((File) validation).exists()))
+				(!(validation instanceof JSONArray) && validation instanceof Collection<?> &&
+						!((Collection<?>) validation).contains("file") ||
+				(validation instanceof File && !((File) validation).exists())))
 			throw new ExceptionValidation(ExceptionValidation.EMPTY_PARAMETER);
 	}
 	
@@ -179,7 +181,7 @@ public class Validator {
 					throw new ExceptionValidation(ExceptionValidation.WRONG_PARAMETER);
 		}
 		else if (validator == RESPONSE) {
-			if ((int) validation != 0 ||
+			if ((int) validation != 0 &&
 					(int) validation != 1)
 				throw new ExceptionValidation(ExceptionValidation.WRONG_PARAMETER);
 		}
@@ -192,10 +194,10 @@ public class Validator {
 				throw new ExceptionValidation(ExceptionValidation.WRONG_PARAMETER);
 		}
 		else if (validator == COMMENT_TYPE) {
-			if ((int) validation != 11 ||
-					(int) validation != 12 ||
-					(int) validation != 13 ||
-					(int) validation != 21 ||
+			if ((int) validation != 11 &&
+					(int) validation != 12 &&
+					(int) validation != 13 &&
+					(int) validation != 21 &&
 					(int) validation != 22)
 				throw new ExceptionValidation(ExceptionValidation.WRONG_COMMENT_TYPE);
 		}
