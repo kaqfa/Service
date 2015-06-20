@@ -481,10 +481,10 @@ public class Student {
 			
 			taskObject.put("id_task", GeneralService.GetTaskID(collStudent, student));
 			taskObject.put("status", 0);
-			taskObject.replace("duration", duration);
+			taskObject.put("duration", duration);
 			taskObject.put("created_date", Service.today);
 			taskObject.put("end_date", null);
-			taskObject.replace("file", files);
+			taskObject.put("file", files);
 			taskObject.put("comment", new JSONArray());
 			
 			DBObject queryObject = new BasicDBObject();
