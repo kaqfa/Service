@@ -1,5 +1,7 @@
 package restws;
 
+import java.util.regex.Pattern;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -8,6 +10,10 @@ import javax.ws.rs.PathParam;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
+
+import reccomender.CollaborativeFiltering;
+import reccomender.ContentBased;
+import reccomender.WeightedHybrid;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
@@ -82,6 +88,7 @@ public class Student {
 			objectInsideObject.put("field", new JSONArray());
 			
 			insertObject.put("thesis", objectInsideObject);
+			insertObject.put("references", new JSONArray());
 			insertObject.put("task", new JSONArray());
 			
 			objectInsideObject = new BasicDBObject();
@@ -438,6 +445,279 @@ public class Student {
 		catch (Exception e) {
 			outputJson.put("code", -1);
 			outputJson.put("message", e.toString());
+		}
+
+		return outputJson.toString();
+	}
+	
+	@POST
+	@Path("/addreference")
+	@SuppressWarnings("unchecked")
+	public String AddReference(String jsonString) {
+		JSONObject outputJson = new JSONObject();
+		try {
+			DB db = MONGODB.GetMongoDB();
+			DBCollection collApp = db.getCollection("application");
+			DBCollection collToken = db.getCollection("token");
+			DBCollection collStudent = db.getCollection("student");
+			DBCollection collReference = db.getCollection("references");
+			
+			JSONObject inputJson = (JSONObject) JSONValue.parse(jsonString);
+			GeneralService.AppkeyCheck(inputJson.get("appkey").toString(), collApp);
+			
+			String username = GeneralService.TokenCheck(inputJson.get("token").toString(), collToken); 
+			String refid = inputJson.get("id").toString();
+
+			Validator.isParameterWrong(collReference, refid);
+			
+			DBObject queryObject = new BasicDBObject("_id", username);
+			DBObject objectToPush = new BasicDBObject("references", refid);
+			DBObject updateObject = new BasicDBObject("$addToSet", objectToPush);
+			collStudent.update(queryObject, updateObject);
+			
+			outputJson.put("code", 1);
+			outputJson.put("message", "Success");
+		}
+		catch (ExceptionValidation e) {
+			outputJson.put("code", 0);
+			outputJson.put("message", e.toString());
+		}
+		catch (Exception e) {
+			outputJson.put("code", -1);
+			outputJson.put("message", e.toString());
+		}
+
+		return outputJson.toString();
+	}
+	
+	@POST
+	@Path("/removereference")
+	@SuppressWarnings("unchecked")
+	public String RemoveReference(String jsonString) {
+		JSONObject outputJson = new JSONObject();
+		try {
+			DB db = MONGODB.GetMongoDB();
+			DBCollection collApp = db.getCollection("application");
+			DBCollection collToken = db.getCollection("token");
+			DBCollection collStudent = db.getCollection("student");
+			
+			JSONObject inputJson = (JSONObject) JSONValue.parse(jsonString);
+			GeneralService.AppkeyCheck(inputJson.get("appkey").toString(), collApp);
+			
+			String username = GeneralService.TokenCheck(inputJson.get("token").toString(), collToken); 
+			String refid = inputJson.get("id").toString();
+
+			Validator.isParameterEmpty(refid);
+			
+			DBObject queryObject = new BasicDBObject("_id", username);
+			DBObject objectToPull = new BasicDBObject("references", refid);
+			DBObject updateObject = new BasicDBObject("$pull", objectToPull);
+			collStudent.update(queryObject, updateObject);
+			
+			outputJson.put("code", 1);
+			outputJson.put("message", "Success");
+		}
+		catch (ExceptionValidation e) {
+			outputJson.put("code", 0);
+			outputJson.put("message", e.toString());
+		}
+		catch (Exception e) {
+			outputJson.put("code", -1);
+			outputJson.put("message", e.toString());
+		}
+
+		return outputJson.toString();
+	}
+	
+	@GET
+	@Path("/getallreference/{appkey}/{token}")
+	@SuppressWarnings("unchecked")
+	public String GetAllReference(@PathParam("appkey") String appkey, @PathParam("token") String token) 
+	{
+		JSONObject outputJson = new JSONObject();
+		JSONArray data_json = new JSONArray();
+		try {
+			DB db = MONGODB.GetMongoDB();
+			DBCollection collApp = db.getCollection("application");
+			DBCollection collToken = db.getCollection("token");
+			DBCollection collStudent = db.getCollection("student");
+			DBCollection collReference = db.getCollection("references");
+			
+			GeneralService.AppkeyCheck(appkey, collApp);
+			String username = GeneralService.TokenCheck(token, collToken);
+			
+			DBObject queryObject = new BasicDBObject();
+			queryObject.put("_id", username);
+			DBObject studentObject = collStudent.findOne(queryObject);
+			DBCursor cursor=null;
+			if(studentObject==null)
+				cursor = collReference.find();
+			else if(studentObject.get("references")==null)
+				cursor = collReference.find(new BasicDBObject("_id","empty"));
+			else
+				cursor = collReference.find(new BasicDBObject("_id",  new BasicDBObject("$in", studentObject.get("references"))));
+			DBObject reference=null;
+			while (cursor.hasNext()) {
+				reference=cursor.next();
+				queryObject=new BasicDBObject("references", reference.get("_id"));
+				reference.put("count", collStudent.count(queryObject));
+				data_json.add(reference);
+			}
+			cursor.close();
+			
+			if (data_json.size() == 0)
+			{
+				outputJson.put("code", 0);
+				outputJson.put("message", "Not Found");
+				outputJson.put("data", null);
+			}else
+			{
+				outputJson.put("code", 1);
+				outputJson.put("message", "Success");
+				outputJson.put("data", data_json);
+			}
+		} 
+		catch (Exception e) 
+		{
+			outputJson.put("code", -1);
+			outputJson.put("message", e.toString());
+		}
+
+		return outputJson.toString();
+	}
+	
+	@GET
+	@Path("/searchreference/{keysearch}/{appkey}/{token}")
+	@SuppressWarnings("unchecked")
+	public String SearchReference(@PathParam("keysearch") String keySearch, @PathParam("appkey") String appkey,
+			@PathParam("token") String token) {
+		JSONObject outputJson = new JSONObject();
+		try {
+			DB db = MONGODB.GetMongoDB();
+			DBCollection collApp = db.getCollection("application");
+			DBCollection collToken = db.getCollection("token");
+			DBCollection collStudent = db.getCollection("student");
+			DBCollection collReference = db.getCollection("references");
+			
+			GeneralService.AppkeyCheck(appkey, collApp);
+			String username = GeneralService.TokenCheck(token, collToken);
+
+			Validator.isParameterEmpty(keySearch);
+			Validator.isParameterWrong(keySearch, Validator.FIELD_NAME);
+			
+			JSONArray referenceArray = new JSONArray();
+			DBObject queryObject = new BasicDBObject();
+			queryObject.put("_id", username);
+			DBObject studentObject = collStudent.findOne(queryObject);
+			DBCursor referenceList=null;
+			queryObject = new BasicDBObject("title",  Pattern.compile(Pattern.quote(keySearch), Pattern.CASE_INSENSITIVE));
+			if(!(studentObject==null||studentObject.get("references")==null))
+				queryObject.put("_id", new BasicDBObject("$in", studentObject.get("references")));
+			referenceList = collReference.find(queryObject);
+			Validator.isExist(referenceList, Validator.GENERAL);
+			
+			DBObject reference=null;
+			while (referenceList.hasNext()) {
+				reference=referenceList.next();
+				queryObject=new BasicDBObject("references", reference.get("_id"));
+				reference.put("count", collStudent.count(queryObject));
+				referenceArray.add(reference);
+			}
+			referenceList.close();
+			
+			outputJson.put("code", 1);
+			outputJson.put("message", "Success");
+			outputJson.put("data", referenceArray);
+		} 
+		catch (ExceptionValidation e) {
+			outputJson.put("code", 0);
+			outputJson.put("message", e.toString());
+			outputJson.put("data", null);
+		}
+		catch (Exception e) {
+			outputJson.put("code", -1);
+			outputJson.put("message", e.toString());
+			outputJson.put("data", null);
+		}
+
+		return outputJson.toString();
+	}
+	
+	@GET
+	@Path("/reccomender/{appkey}/{token}")
+	@SuppressWarnings("unchecked")
+	public String Reccomender(@PathParam("appkey") String appkey,
+			@PathParam("token") String token) {
+		JSONObject outputJson = new JSONObject();
+		try {
+			DB db = MONGODB.GetMongoDB();
+			DBCollection collApp = db.getCollection("application");
+			DBCollection collToken = db.getCollection("token");
+			DBCollection collStudent = db.getCollection("student");
+			DBCollection collReference = db.getCollection("references");
+			
+			GeneralService.AppkeyCheck(appkey, collApp);
+			String username = GeneralService.TokenCheck(token, collToken);
+			
+			JSONArray referenceArray = new JSONArray();
+			JSONArray neighborArray = new JSONArray();
+			DBObject queryObject = new BasicDBObject();
+			queryObject.put("_id", username);
+			DBObject studentObject = collStudent.findOne(queryObject);
+			Validator.isExist(studentObject, Validator.GENERAL);
+			Validator.isExist(studentObject.get("references"), Validator.GENERAL);
+			queryObject = new BasicDBObject();
+			queryObject.put("_id", new BasicDBObject("$nin", studentObject.get("references")));
+			
+			DBCursor referenceList=collReference.find(queryObject);
+			Validator.isExist(referenceList, Validator.GENERAL);
+			DBObject obj=null;
+			while (referenceList.hasNext()) {
+				obj=referenceList.next();
+				referenceArray.add(obj);
+			}
+			referenceList.close();
+			
+			queryObject = new BasicDBObject();
+			queryObject.put("_id", new BasicDBObject("$ne",username));
+			
+			DBCursor neighbor = collStudent.find(queryObject);
+			Validator.isExist(neighbor, Validator.GENERAL);
+			obj=null;
+			while (neighbor.hasNext()) {
+				obj=neighbor.next();
+				neighborArray.add(obj);
+			}
+			neighbor.close();
+			CollaborativeFiltering cf=new CollaborativeFiltering((JSONObject)JSONValue.parse(studentObject.toString()), neighborArray);	
+			ContentBased cb=new ContentBased(referenceArray, (JSONArray)((JSONObject)JSONValue.parse(studentObject.get("thesis").toString())).get("field"));
+			WeightedHybrid rec=new WeightedHybrid(cf.getSim(), cb.getSim(), 0.35, 0.65, 5);
+			queryObject = new BasicDBObject();
+			queryObject.put("_id", new BasicDBObject("$in", rec.getResult()));
+			
+			referenceList=collReference.find(queryObject);
+			referenceArray=new JSONArray();
+			obj=null;
+			while (referenceList.hasNext()) {
+				obj=referenceList.next();
+				referenceArray.add(obj);
+			}
+			referenceList.close();
+			outputJson.put("code", 1);
+			outputJson.put("message", "Success");
+			outputJson.put("data", referenceArray);
+		} 
+		catch (ExceptionValidation e) {
+			e.printStackTrace();
+			outputJson.put("code", 0);
+			outputJson.put("message", e.toString());
+			outputJson.put("data", null);
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			outputJson.put("code", -1);
+			outputJson.put("message", e.toString());
+			outputJson.put("data", null);
 		}
 
 		return outputJson.toString();

@@ -47,6 +47,7 @@ public class Validator {
 	public static final int COMMENT_TYPE = 22;
 	public static final int COMMENT_TEXT = 23;
 	public static final int FILE_EXTENSION = 24;
+	public static final int YEAR = 25;
 	
 	public static final int STUDENT_STATUS_IDLE = -1;
 	public static final int STUDENT_STATUS_PROPOSE = 0;
@@ -147,7 +148,7 @@ public class Validator {
 				throw new ExceptionValidation(ExceptionValidation.WRONG_PARAMETER);
 		}
 		else if (validator == THESIS_TITLE) {
-			if (((String) validation).length() > 100)
+			if (((String) validation).length() > 300)
 				throw new ExceptionValidation(ExceptionValidation.WRONG_PARAMETER);
 		}
 		else if (validator == THESIS_DESCRIPTION) {
@@ -186,7 +187,7 @@ public class Validator {
 				throw new ExceptionValidation(ExceptionValidation.WRONG_PARAMETER);
 		}
 		else if (validator == FIELD_NAME) {
-			if (((String) validation).length() > 25)
+			if (((String) validation).length() > 50)
 				throw new ExceptionValidation(ExceptionValidation.WRONG_PARAMETER);
 		}
 		else if (validator == FIELD_DESCRIPTION) {
@@ -211,6 +212,10 @@ public class Validator {
 			if (!extension.equals("pdf"))
 				throw new ExceptionValidation(ExceptionValidation.WRONG_FILE_EXTENSION);
 		}
+		else if(validator == YEAR){
+			if(validation instanceof String && ((String) validation).length()<4)
+				throw new ExceptionValidation(ExceptionValidation.WRONG_FILE_EXTENSION);
+		}
 	}
 	
 	public static void isParameterWrong(DBCollection collField, JSONArray field) throws ExceptionValidation {
@@ -220,6 +225,13 @@ public class Validator {
 			if (objectField == null)
 				throw new ExceptionValidation(ExceptionValidation.FIELD_NOT_EXIST);
 		}
+	}
+	
+	public static void isParameterWrong(DBCollection collField, String field) throws ExceptionValidation {
+		DBObject queryObject = new BasicDBObject("_id", field);
+		DBObject objectField = collField.findOne(queryObject);
+		if (objectField == null)
+			throw new ExceptionValidation(ExceptionValidation.FIELD_NOT_EXIST);
 	}
 	
 	public static void isStudentStatus(int status, int validator) throws ExceptionValidation {
@@ -237,7 +249,7 @@ public class Validator {
 		}
 		else if (validator == STUDENT_STATUS_ACTIVE) {
 			if (status != Student.STATUS_ACTIVE)
-				throw new ExceptionValidation(ExceptionValidation.WRONG_STUDENT_STATUS);
+				throw new ExceptionValidation(ExceptionValidation.WRONG_YEAR);
 		}
 	}
 }

@@ -22,6 +22,7 @@ public class ExceptionValidation extends Exception {
 	public static final int TASK_NOT_EXIST = 15;
 	public static final int TEMPLATE_NOT_EXIST = 16;
 	public static final int USER_NOT_EXIST = 17;
+	public static final int WRONG_YEAR = 18;
 	
 	public ExceptionValidation(int code) {
 		super();
@@ -78,7 +79,8 @@ public class ExceptionValidation extends Exception {
 
 		else if (code == USER_NOT_EXIST)
 			message = "Cannot Find User!";
-
+		else if (code == WRONG_YEAR)
+			message = "Year must be 4 digits!";
 		else
 			message = "Code for validation is not valid!";
 	}

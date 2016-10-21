@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URLDecoder;
 import java.nio.file.Files;
 import java.text.ParseException;
 import java.util.Date;
@@ -21,6 +22,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -200,11 +202,12 @@ public class Service {
 			GeneralService.AppkeyCheck(appkey, collApp);
 			GeneralService.TokenCheck(token, collToken);
 
+			//keySearch=URLDecoder.decode(keySearch, java.nio.charset.StandardCharsets.UTF_8.toString());
 			Validator.isParameterEmpty(keySearch);
 			Validator.isParameterWrong(keySearch, Validator.FIELD_NAME);
 			
 			JSONArray fieldArray = new JSONArray();
-			DBObject queryObject = new BasicDBObject("_id",  Pattern.compile(keySearch));
+			DBObject queryObject = new BasicDBObject("_id",  Pattern.compile(keySearch, Pattern.CASE_INSENSITIVE));
 			DBCursor fieldList = collField.find(queryObject);
 			Validator.isExist(fieldList, Validator.GENERAL);
 			
@@ -677,6 +680,214 @@ public class Service {
 			outputJson.put("code", -1);
 			outputJson.put("message", e.toString());
 		}
+		return outputJson.toString();
+	}
+	
+	@POST
+	@Path("/createreference")
+	@SuppressWarnings("unchecked")
+	public String CreateReference(String jsonString) {
+		JSONObject outputJson = new JSONObject();
+		try {
+			DB db = MONGODB.GetMongoDB();
+			DBCollection collApp = db.getCollection("application");
+			DBCollection collToken = db.getCollection("token");
+			DBCollection collReference = db.getCollection("references");
+			
+			JSONObject inputJson = (JSONObject) JSONValue.parse(jsonString);
+			GeneralService.AppkeyCheck(inputJson.get("appkey").toString(), collApp);
+			
+			// Initiate Parameter
+			String addedby = GeneralService.TokenCheck(inputJson.get("token").toString(), collToken); 
+			String author = inputJson.get("author").toString();
+			String title = inputJson.get("title").toString();
+			String year = inputJson.get("year").toString();
+			String abstr = inputJson.get("abstract").toString();
+			JSONArray keywords = (JSONArray) JSONValue.parse(inputJson.get("keywords").toString());
+			
+			Validator.isParameterEmpty(author);
+			Validator.isParameterEmpty(title);
+			Validator.isParameterEmpty(year);
+			Validator.isParameterEmpty(keywords);
+			
+			Validator.isParameterWrong(title, Validator.THESIS_TITLE);
+			Validator.isParameterWrong(year, Validator.YEAR);
+			
+			DBObject insertObject = new BasicDBObject();
+			String id=RandomStringUtils.randomAlphanumeric(20);
+			insertObject.put("_id", id);
+			insertObject.put("added_by", addedby);
+			insertObject.put("author", author);
+			insertObject.put("title", title);
+			insertObject.put("year", year);
+			insertObject.put("abstract", abstr);
+			insertObject.put("keywords", keywords);
+			collReference.insert(insertObject);
+			
+			outputJson.put("code", 1);
+			outputJson.put("message", "Success");
+			outputJson.put("data", id);
+		}
+		catch (ExceptionValidation e) {
+			outputJson.put("code", 0);
+			outputJson.put("message", e.toString());
+		}
+		catch (Exception e) {
+			outputJson.put("code", -1);
+			outputJson.put("message", e.toString());
+		}
+
+		return outputJson.toString();
+	}
+	
+	@GET
+	@Path("/getallreference/{appkey}/{token}")
+	@SuppressWarnings("unchecked")
+	public String GetAllReference(@PathParam("appkey") String appkey, @PathParam("token") String token) 
+	{
+		JSONObject outputJson = new JSONObject();
+		JSONArray data_json = new JSONArray();
+		try {
+			DB db = MONGODB.GetMongoDB();
+			DBCollection collApp = db.getCollection("application");
+			DBCollection collToken = db.getCollection("token");
+			DBCollection collStudent = db.getCollection("student");
+			DBCollection collReference = db.getCollection("references");
+			
+			GeneralService.AppkeyCheck(appkey, collApp);
+			String username = GeneralService.TokenCheck(token, collToken);
+			
+			DBObject queryObject = new BasicDBObject();
+			queryObject.put("_id", username);
+			DBObject studentObject = collStudent.findOne(queryObject);
+			DBCursor cursor=null;
+			if(studentObject==null||studentObject.get("references")==null)
+				cursor = collReference.find();
+			else
+				cursor = collReference.find(new BasicDBObject("_id",  new BasicDBObject("$nin", studentObject.get("references"))));
+			DBObject reference=null;
+			while (cursor.hasNext()) {
+				reference=cursor.next();
+				queryObject=new BasicDBObject("references", reference.get("_id"));
+				reference.put("count", collStudent.count(queryObject));
+				data_json.add(reference);
+			}
+			cursor.close();
+			
+			if (data_json.size() == 0)
+			{
+				outputJson.put("code", 0);
+				outputJson.put("message", "Not Found");
+				outputJson.put("data", null);
+			}else
+			{
+				outputJson.put("code", 1);
+				outputJson.put("message", "Success");
+				outputJson.put("data", data_json);
+			}
+		} 
+		catch (Exception e) 
+		{
+			outputJson.put("code", -1);
+			outputJson.put("message", e.toString());
+		}
+
+		return outputJson.toString();
+	}
+	
+	@GET
+	@Path("/searchreference/{keysearch}/{appkey}/{token}")
+	@SuppressWarnings("unchecked")
+	public String SearchReference(@PathParam("keysearch") String keySearch, @PathParam("appkey") String appkey,
+			@PathParam("token") String token) {
+		JSONObject outputJson = new JSONObject();
+		try {
+			DB db = MONGODB.GetMongoDB();
+			DBCollection collApp = db.getCollection("application");
+			DBCollection collToken = db.getCollection("token");
+			DBCollection collStudent = db.getCollection("student");
+			DBCollection collReference = db.getCollection("references");
+			
+			GeneralService.AppkeyCheck(appkey, collApp);
+			String username = GeneralService.TokenCheck(token, collToken);
+
+			Validator.isParameterEmpty(keySearch);
+			Validator.isParameterWrong(keySearch, Validator.FIELD_NAME);
+			//keySearch=URLDecoder.decode(keySearch, java.nio.charset.StandardCharsets.UTF_8.toString());
+			
+			JSONArray referenceArray = new JSONArray();
+			DBObject queryObject = new BasicDBObject();
+			queryObject.put("_id", username);
+			DBObject studentObject = collStudent.findOne(queryObject);
+			DBCursor referenceList=null;
+			queryObject = new BasicDBObject("title",  Pattern.compile(Pattern.quote(keySearch), Pattern.CASE_INSENSITIVE));
+			if(!(studentObject==null||studentObject.get("references")==null))
+				queryObject.put("_id", new BasicDBObject("$nin", studentObject.get("references")));
+			referenceList = collReference.find(queryObject);
+			Validator.isExist(referenceList, Validator.GENERAL);
+			DBObject reference=null;
+			while (referenceList.hasNext()) {
+				reference=referenceList.next();
+				queryObject=new BasicDBObject("references", reference.get("_id"));
+				reference.put("count", collStudent.count(queryObject));
+				referenceArray.add(reference);
+			}
+			referenceList.close();
+			
+			outputJson.put("code", 1);
+			outputJson.put("message", "Success");
+			outputJson.put("data", referenceArray);
+		} 
+		catch (ExceptionValidation e) {
+			outputJson.put("code", 0);
+			outputJson.put("message", e.toString());
+			outputJson.put("data", null);
+		}
+		catch (Exception e) {
+			outputJson.put("code", -1);
+			outputJson.put("message", e.toString());
+			outputJson.put("data", null);
+		}
+
+		return outputJson.toString();
+	}
+	
+	@GET
+	@Path("/getreference/{refid}/{appkey}/{token}")
+	@SuppressWarnings("unchecked")
+	public String GetReference(@PathParam("refid") String refId, @PathParam("appkey") String appkey,
+			@PathParam("token") String token) {
+		JSONObject outputJson = new JSONObject();
+		try {
+			DB db = MONGODB.GetMongoDB();
+			DBCollection collApp = db.getCollection("application");
+			DBCollection collToken = db.getCollection("token");
+			DBCollection collReference = db.getCollection("references");
+			
+			GeneralService.AppkeyCheck(appkey, collApp);
+			GeneralService.TokenCheck(token, collToken);
+
+			Validator.isParameterEmpty(refId);
+			
+			DBObject queryObject = new BasicDBObject("_id",  refId);
+			DBObject reference = collReference.findOne(queryObject);
+			Validator.isExist(reference, Validator.TASK_ID);
+			
+			outputJson.put("code", 1);
+			outputJson.put("message", "Success");
+			outputJson.put("data", reference);
+		} 
+		catch (ExceptionValidation e) {
+			outputJson.put("code", 0);
+			outputJson.put("message", e.toString());
+			outputJson.put("data", null);
+		}
+		catch (Exception e) {
+			outputJson.put("code", -1);
+			outputJson.put("message", e.toString());
+			outputJson.put("data", null);
+		}
+
 		return outputJson.toString();
 	}
 	

@@ -796,6 +796,113 @@ public class Supervisor {
 
 		return outputJson.toString();
 	}
+	
+	@POST
+	@Path("/updatereference")
+	@SuppressWarnings("unchecked")
+	public String UpdateReference(String jsonString) {
+		JSONObject outputJson = new JSONObject();
+		try {
+			DB db = MONGODB.GetMongoDB();
+			DBCollection collApp = db.getCollection("application");
+			DBCollection collToken = db.getCollection("token");
+			DBCollection collReference = db.getCollection("references");
+			
+			JSONObject inputJson = (JSONObject) JSONValue.parse(jsonString);
+			GeneralService.AppkeyCheck(inputJson.get("appkey").toString(), collApp);
+			
+			// Initiate Parameter
+			GeneralService.TokenCheck(inputJson.get("token").toString(), collToken); 
+			String id = inputJson.get("id").toString();
+			String author = inputJson.get("author").toString();
+			String title = inputJson.get("title").toString();
+			String year = inputJson.get("year").toString();
+			String abstr = inputJson.get("abstract").toString();
+			JSONArray keywords = (JSONArray) JSONValue.parse(inputJson.get("keywords").toString());
+			
+			Validator.isParameterEmpty(author);
+			Validator.isParameterEmpty(title);
+			Validator.isParameterEmpty(year);
+			Validator.isParameterEmpty(keywords);
+			
+			Validator.isParameterWrong(title, Validator.THESIS_TITLE);
+			Validator.isParameterWrong(year, Validator.YEAR);
+			DBObject queryObject = new BasicDBObject("_id", id);
+			DBObject objectToSet = new BasicDBObject();
+			objectToSet.put("author", author);
+			objectToSet.put("title", title);
+			objectToSet.put("year", year);
+			objectToSet.put("abstract", abstr);
+			objectToSet.put("keywords", keywords);
+			DBObject updateObject = new BasicDBObject("$set", objectToSet);
+			collReference.update(queryObject, updateObject);
+			
+			outputJson.put("code", 1);
+			outputJson.put("message", "Success");
+		}
+		catch (ExceptionValidation e) {
+			outputJson.put("code", 0);
+			outputJson.put("message", e.toString());
+		}
+		catch (Exception e) {
+			outputJson.put("code", -1);
+			outputJson.put("message", e.toString());
+		}
+
+		return outputJson.toString();
+	}
+	
+	@POST
+	@Path("/deletereference")
+	@SuppressWarnings("unchecked")
+	public String DeleteReference(String jsonString) {
+		JSONObject outputJson = new JSONObject();
+		try {
+			DB db = MONGODB.GetMongoDB();
+			DBCollection collApp = db.getCollection("application");
+			DBCollection collToken = db.getCollection("token");
+			DBCollection collSupervisor = db.getCollection("supervisor");
+			DBCollection collStudent = db.getCollection("student");
+			DBCollection collReference = db.getCollection("references");
+			
+			JSONObject inputJson = (JSONObject) JSONValue.parse(jsonString);
+			GeneralService.AppkeyCheck(inputJson.get("appkey").toString(), collApp);
+			
+			// Initiate Parameter
+			String username = GeneralService.TokenCheck(inputJson.get("token").toString(), collToken);
+			String id = inputJson.get("id").toString();
+			
+			Validator.isParameterEmpty(id);
+			
+			DBObject supervisorObject = GeneralService.GetDBObjectFromId(collSupervisor, username);
+			DBObject refObject = GeneralService.GetDBObjectFromId(collReference, id);
+			Validator.isExist(supervisorObject, Validator.USER_SUPERVISOR);
+			Validator.isExist(refObject, Validator.GENERAL);
+			
+			DBObject removeObject = new BasicDBObject("_id", id);
+//			DBObject ObjectToBeSet = new BasicDBObject("field", name);
+//			DBObject ObjectSet = new BasicDBObject("$pull", ObjectToBeSet);
+			
+			collReference.remove(removeObject);
+			DBObject objectToPull = new BasicDBObject("references", id);
+			DBObject updateObject = new BasicDBObject("$pull", objectToPull);
+			collStudent.updateMulti(new BasicDBObject(), updateObject);
+//			collSupervisor.update(ObjectToBeSet, ObjectSet);
+			
+			outputJson.put("code", 1);
+			outputJson.put("message", "Success");
+		}
+		catch (ExceptionValidation e) {
+			outputJson.put("code", 0);
+			outputJson.put("message", e.toString());
+		}
+		catch (Exception e) {
+			outputJson.put("code", -1);
+			outputJson.put("message", e.toString());
+		}
+
+		return outputJson.toString();
+	}
 
 	private int CountTask(int status, String username, DBCollection coll) {
 		List<DBObject> pipeline = new ArrayList<DBObject>();
